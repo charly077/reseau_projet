@@ -1,4 +1,6 @@
-reseau_projet
+reseau projet
 =============
 
-projet de bonaventure ... 
+projet de bonaventure 
+
+ATTENTION, pour le bon fonctionnement de ce programme, il faut avoir installé zlib 
