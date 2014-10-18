@@ -8,6 +8,8 @@ ARFLAGS = -cvq
 CFLAGS = -Wall -std=c99 -g -c
 LDFLAGS = --static -g
 
-all: sender receiver
-
-
+sender: sender.c
+	$(GCC) sender.c -Wall -std=c99 -g -o sender
+	./sender
+clean:
+	rm sender
