@@ -23,7 +23,7 @@ typedef struct msgUDP{
 
 
 int main(int argc, char *argv[]){
-	//gestion des paramètres:
+	//VARIABLES ET GESTION DES PARAMETRE:
 	int i = 1;
 	char *filename; // Attention à bien vérifier le bool pour si on prend sur le stdin ou pas ...
 	int filenamegive=0; // le nom n'a pas été donné --> on prend sur le stdin
@@ -53,18 +53,21 @@ int main(int argc, char *argv[]){
 	}
 	//printf("filename %s,\nsber %d,\nsplr %d,\ndelay %d.\n", filename, sber, splr, delay); // test pour vérification des arguments
 
-	//récuperation des information sur l'adresse du serveur ou receiver ..
+	//RECUPERATION DES INFO SUR L'ADDRESSE DU RECEIVER :
+
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET6; // je veux juste de l'IPv6
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags=0;
 	hints.ai_protocol = 0 ; // peut importe le protocol ...
-	s = getaddrinfo(argv[argc-2], argv[-1], &hints, &res);
+
+
+	s = getaddrinfo(argv[argc-2], argv[-1], &hints, &res); // obtention de la liste d'addrinfo
 	if (s != 0){
 		fprintf(stderr, "getaddrinfo: %s\n",gai_strerror(s));
 		exit(EXIT_FAILURE);
 	}
-	//res est liste de strucutures d'addresse 
+	//res est une liste de strucutures d'addresse à laquelle on essaye de se connecter 
 	for(addr = res; addr != NULL; addr = addr->ai_next){
 		sock =  socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 		if(sock == -1) continue; // si on arrive pas à créer un socket on continue
@@ -78,18 +81,17 @@ int main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);
 	}
 	
-	//libérer les addrinfo:
-	freeaddrinfo(res); // on en a plus besoin après
-
 	
+	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
+	
+	//if filenamegive == 0 then fdread = 0 (soit le stdin)
+
+	//else ouvrir le fichier correspondant, fdread = descripteur du fichier correspondant ... 
 
 
+	//FERMETURE DES DESCRIPTEURS :
 
-
+	//if filename != 0 then fermer le descripteur fdread
 	close(sock);
 
 }
-
-
-
-
