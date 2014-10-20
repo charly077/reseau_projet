@@ -8,6 +8,54 @@
 #define PACKET_SIZE 520
 #define BUFFER_SIZE 512
 
+// Doit etre remplacé par le sockaddr_in6 !!!!!!!!!
+struct in_addr {
+   in_addr_t	s_addr;
+};
+
+// Doit etre remplacé par le sockaddr_in6 !!!!!!!!!
+struct sockaddr_in {
+   uint8_t         sin_len;       /* longueur totale      */
+   sa_family_t     sin_family;    /* famille : AF_INET     */
+   in_port_t       sin_port;      /* le numéro de port    */
+   struct in_addr  sin_addr;      /* l'adresse internet   */
+   unsigned char   sin_zero[8];   /* un champ de 8 zéros  */
+};
+
+
+
+struct addrinfo {
+    int              ai_flags;
+    int              ai_family;
+    int              ai_socktype;
+    int              ai_protocol;
+    size_t           ai_addrlen;
+    struct sockaddr *ai_addr;
+    char            *ai_canonname;
+    struct addrinfo *ai_next;
+};
+
+
+struct in6_addr {
+    unsigned char   s6_addr[16];   // load with inet_pton()
+};
+
+
+struct sockaddr_in6 {
+    u_int16_t       sin6_family;   // address family, AF_INET6
+    u_int16_t       sin6_port;     // port number, Network Byte Order
+    u_int32_t       sin6_flowinfo; // IPv6 flow information
+    struct in6_addr sin6_addr;     // IPv6 address
+    u_int32_t       sin6_scope_id; // Scope ID
+};
+
+/*
+struct sockaddr {
+   unsigned char   sa_len;         // longueur totale 		
+   sa_family_t     sa_family;      // famille d'adresse 	
+   char            sa_data[14];    // valeur de l'adresse	
+};
+*/
 //création d'un structure de donnée pour envoyer les messages:
 typedef struct msgUDP{
 	uint8_t Type : 3;
@@ -22,7 +70,7 @@ int main(int argc, char *argv[])
 {
 	char *filename;
 	int port;
-	char *hostname
+	char *hostname;
 
 	// On vérifie le nombre d'argument
 	if (argc != 3 || argc != 5)
@@ -113,7 +161,7 @@ int main(int argc, char *argv[])
     {
         length_receiv = recvfrom(sockett, temp_buf, PACKET_SIZE, 0, (struct sockaddr *) &addr_sender, &addrlen); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
         if (length_receiv == -1) {
-            printf("Problème, le message reçu est trop court...\n", );               /* Ignore failed request */
+            printf("Problème, le message reçu est trop court...\n" );               /* Ignore failed request */
         }
 
         // Vérification du CRC
