@@ -6,7 +6,10 @@
 #include <zlib.h> // Pour le CRC
 
 #define PACKET_SIZE 520
-#define BUFFER_SIZE 512
+#define PAYLOAD_SIZE 512
+#define WITHOUT_CRC_SIZE 516
+#define PTYPE_DATA 1
+#define PTYPE_ACK 2
 
 // Doit etre remplacé par le sockaddr_in6 !!!!!!!!!
 struct in_addr {
@@ -63,7 +66,7 @@ typedef struct msgUDP{
 	uint8_t Seq_num;
 	uint16_t Length;
 	char payload[512]; //je ne sais pas comment implémenter le payload de 512bytes dans la structure
-	int crc32;         //j'ai pris un int parce qu'il a la bonne dimension, c'est a dire 4 bits ... mais normalement uLong crc32
+	int crc32;         //j'ai pris un int parce qu'il a la bonne dimension, c'est a dire 4 bits ... mais normalement uLong crc32 -> ouai, bizarre...
 }__attribute__((packed)) msgUDP;
 
 int main(int argc, char *argv[])
@@ -147,7 +150,13 @@ int main(int argc, char *argv[])
 	// ------------------------------------------------------------------
 	/* Programme proprement dit ::: */
     int length_receiv;
-    unsigned char temp_buf[BUFFER_SIZE];     /* buffer de réception */
+    char packet_buf[PACKET_SIZE]; 			// buffer de réception du packet
+    char payload_buf[PAYLOAD_SIZE];    		// buffer de réception du payload
+    char calculerCRC_buf[WITHOUT_CRC_SIZE]; // Stocker la partie sur laquelle doit être calculée le CRC
+
+    char a[31][PACKET_SIZE]; 				// Largeur de fenêtre totale.
+    int minimum = 0;    					// Minimum là ou on peut écrire
+    int maximum = 15;						// Maximum là ou on peut écrire
 
     // Ouvrir le fichier
 	FILE *fichier = fopen(filename, "w");
@@ -159,30 +168,51 @@ int main(int argc, char *argv[])
 
     while(length_receiv == PACKET_SIZE) 
     {
-        length_receiv = recvfrom(sockett, temp_buf, PACKET_SIZE, 0, (struct sockaddr *) &addr_sender, &addrlen); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
+        // On reçoit un packet
+        length_receiv = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, (struct sockaddr *) &addr_sender, &addrlen); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
         if (length_receiv == -1) {
             printf("Problème, le message reçu est trop court...\n" );               /* Ignore failed request */
         }
+		
+		// On a reçu un buffer qui est en fait un packet. A la base, c'était une structure donc on la caste dans un structure.
+        struct msgUDP *packet_struct = (struct msgUDP *) packet_buf;
 
-        // Vérification du CRC
+        // Vérification du CRC et de si le type est bien 1
+
+        uLong crc = crc32(0L, Z_NULL, 0); 											// INT !!!!!!!!!
+        memcpy(calculerCRC_buf, packet_buf, strlen(packet_buf) - 4); 				// Je crée un buffer surlequel je vais pouvoir calculer le CRC
+   		crc = crc32(crc, calculerCRC_buf, strlen(calculerCRC_buf));
+		
+		if (crc != msgUDP->crc32 || packet_struct->Type != PTYPE_DATA)
+		{
+			// discard packet
+			printf("Les 2 CRC ne correspondent pas, le packet doit être discardé \n");
+			printf("Ou alors, le message reçu n'est pas un message de type DATA (le Type n'est pas 1) \n");
+		}
+		else
+		{        
+	        // Vérifie qu'on est dans les bons numéros de séquences....
+	        if(packet_struct->Seq_num > minimum && packet_struct->Seq_num < maximum) // Hein ? Je fais comment ? C'est lié normalement la taille de la fenêtre et le numéro de séquence....
+	        {
+	        	// Le numéro de packet est ok, je peux le sauver dans une des fenêtres !
+	        	// Mettre dans un buffer temporaire qui est dans une fenêtre
+		        payload_buf = packet_struct->payload;
 
 
-        // Vérification de si le type est bien 1
+		        // Mettre à jour le lastack
 
 
-        // Mettre dans un buffer temporaire qui est dans une fenêtre
+
+		        // Ecriture dans le fichier	
+		        fwrite(payload_buf, 1, sizeof(payload_buf), fichier);	
+				printf("Nouveau message reçu et sauvé : %s\n", payload_buf);
 
 
-        // Mettre à jour le lastack
+				// Envoyer ACK
 
-
-        // Ecriture dans le fichier		
-		fprintf(fichier, "Nouveau message reçu : %s\n", temp_buf);
-
-
-		// Envoyer ACK
-
-
+	        }
+	        
+		}
        
     }    
 
