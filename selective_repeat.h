@@ -56,12 +56,6 @@ void create_window(struct window **win);
 */
 void free_window();
 
-/*
-* fonction utilisée sur un thread qui va surveiller l'état de la fenetre, c'est à dire
-*	-> parcourir la fenetre toutes les N ms
-*	-> si le premier elem est ack -> le supprime et appelle les fonctions pour décaller la fenetre
-*	-> si le timer d'un élement est dépassé, le remet à 0 et le reenvoie. (cfr plus tard mais peut-etre faire une liste pour elem à envoyer)
-*/
-void check_window(); // thread vérifiant l'état de la fenetre
+
 
 #endif // fin du header SELECTIVE_REPEAT_H
