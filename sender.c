@@ -62,7 +62,7 @@ int main(int argc, char *argv[]){
 	hints.ai_protocol = 0 ; // peut importe le protocol ...
 
 
-	s = getaddrinfo(argv[argc-2], argv[-1], &hints, &res); // obtention de la liste d'addrinfo
+	s = getaddrinfo(argv[argc-2], argv[argc-1], &hints, &res); // obtention de la liste d'addrinfo
 	if (s != 0){
 		fprintf(stderr, "getaddrinfo: %s\n",gai_strerror(s));
 		exit(EXIT_FAILURE);
@@ -91,7 +91,9 @@ int main(int argc, char *argv[]){
 
 	//FERMETURE DES DESCRIPTEURS :
 
-	//if filename != 0 then fermer le descripteur fdread
+	//if filename != 0 then fermer le descripteur fdread ATTENTION TODO
+
+
 	close(sock);
 
 }
