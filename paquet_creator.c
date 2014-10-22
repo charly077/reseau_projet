@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -11,7 +12,7 @@
 #include "paquet_creator.h"
 #include "struct.h"
 
-#define TAILLE_PAYLOAD
+#define TAILLE_PAYLOAD 512
 
 int tab_512(int desc, char **elem){
 	char *buf = (char *) malloc(TAILLE_PAYLOAD); // allouer une place de 512 bytes pour le contenu de l'élément
@@ -35,16 +36,17 @@ int file_desc(char *filename){
 	return fd; // ATTENTION ne pas oublier de fermer le file_desc
 }
 
-void create_paquet(int desc,int seq_num, struct msgUDP ** paquet){
+void create_paquet(int desc, int seq_num, struct msgUDP **paquet){
 	char *payload;
 	int size = tab_512b(desc, &payload);
 	struct msgUDP *new_paquet = (struct msgUDP *) malloc(sizeof(struct msgUDP));
 	new_paquet->type = 1;
 	//new_paquet->window /// je sais pas quoi y mettre ...
 	new_paquet->seq_num = seq_num;
-	length = size; // taille de l'élément et donc si c'est le dernier paquet la taille est <à 512bytes
+	new_paquet->length = size; // taille de l'élément et donc si c'est le dernier paquet la taille est <à 512bytes
 	strncpy(new_paquet->payload, payload, 512);
 
 	//calcul du crc sur tout le contenu sauf lui mm
-	new_paquet->crc32 = crc32( ??????
+	new_paquet->crc32 = crc32( 0, (void *)new_paquet, sizeof(msgUDP) - sizeof(uLong));
 }
+

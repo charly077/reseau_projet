@@ -7,6 +7,9 @@
 #ifndef STRUCT_H
 #define STRUCT_H
 
+#include <pthread.h>
+#include <zlib.h>
+
 
 //création d'un structure de donnée pour envoyer les messages:
 typedef struct msgUDP{
@@ -15,7 +18,7 @@ typedef struct msgUDP{
 	uint8_t seq_num;
 	uint16_t length;
 	char payload[512];//je ne sais pas comment implémenter le payload de 512bytes dans la structure
-	int crc32; //j'ai pris un int parce qu'il a la bonne dimension, c'est a dire 4 bits ... mais normalement uLong crc32
+	uLong crc32; 
 }__attribute__((packed)) msgUDP;
 
 

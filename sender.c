@@ -63,19 +63,22 @@ int main(int argc, char *argv[]){
 		close(sock); // si on est pas sorti de la boucle il faut fermer le socket
 	}
 
-	if (addr = NULL){
+	if (addr == NULL){
 		fprintf(stderr, "Impossible de se connecter\n");
 		exit(EXIT_FAILURE);
 	}
 	
 	
-	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
+	
+
+	//test d'envoie simple
+	if(sendto(sock, "bonjour toi", 11,0,addr->ai_addr, addr->ai_addrlen)==11) printf("génial ;) :):):):):):):):):):):):):):):):):)");
 	
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 
 	//else ouvrir le fichier correspondant, fdread = descripteur du fichier correspondant ... 
 
-
+	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
 	//FERMETURE DES DESCRIPTEURS :
 
 	//if filename != 0 then fermer le descripteur fdread ATTENTION TODO

@@ -1,0 +1,109 @@
+advancecomp - collection of recompression utilities
+lib32z1 - compression library - 32 bit runtime
+lib32z1-dev - compression library - 32 bit development
+libapache2-mod-php5 - server-side, HTML-embedded scripting language (Apache 2 module)
+libarchive-dev - Multi-format archive and compression library (development files)
+libarchive13 - Multi-format archive and compression library (shared library)
+libmng-dev - M-N-G library (Development headers)
+libmng2 - Multiple-image Network Graphics library
+libsnappy-dev - fast compression/decompression library (development files)
+libsnappy1 - fast compression/decompression library
+libx32z1 - compression library - x32 runtime
+libx32z1-dev - compression library - x32 development
+libzzip-0-13 - library providing read access on ZIP-archives - library
+libzzip-dev - library providing read access on ZIP-archives - development
+perl - Larry Wall's Practical Extraction and Report Language
+perl-modules - Core Perl modules
+php5-cgi - server-side, HTML-embedded scripting language (CGI binary)
+php5-cli - command-line interpreter for the php5 scripting language
+squashfs-tools - Tool to create and append to squashfs filesystems
+squashfs-tools-dbg - Tool to create and append to squashfs filesystems (debug)
+zlib1g - compression library - runtime
+zlib1g-dbg - compression library - development
+zlib1g-dev - compression library - development
+lib64z1 - compression library - 64 bit runtime
+lib64z1-dev - compression library - 64 bit development
+apf-client - Client for Active Port Forwarding
+apf-server - Server for Active Port Forwarding
+cl-salza - Common Lisp package to write compressed data
+clisp-module-zlib - clisp module that adds zlib support for vectors
+cpm - Curses based password manager using PGP-encryption
+dact - multi-algorithm compression
+dmg2img - Tool for converting compress dmg files to hfsplus images
+fp-units-base - Free Pascal - base units dependency package
+fp-units-base-2.6.2 - Free Pascal - base units
+fp-units-misc - Free Pascal - miscellaneous units dependency package
+fp-units-misc-2.6.2 - Free Pascal - miscellaneous units
+gambas3-gb-compress-bzlib2 - Gambas bzlib2 component
+gambas3-gb-compress-zlib - Gambas zlib compression component
+gauche-zlib - zlib binding for Gauche
+iptstate - top-like interface to your netfilter connection-tracking table
+libapache2-mod-php5filter - server-side, HTML-embedded scripting language (apache 2 filter module)
+libcatalyst-plugin-compress-perl - Catalyst plugin to compress the response
+libcoin80 - high-level 3D graphics kit implementing the Open Inventor API
+libcompress-raw-zlib-perl - low-level interface to zlib compression library
+libcryptokit-ocaml - cryptographic algorithm library for OCaml - runtime
+libcryptokit-ocaml-dev - cryptographic algorithm library for OCaml - development
+libghc-bzlib-dev - Haskell bindings to the bzip2 library
+libghc-bzlib-doc - Documentation for the Haskell bindings to the bzip2 library; documentation
+libghc-bzlib-prof - Profiling libraries for the Haskell bindings to the bzip2 library; profiling libraries
+libghc-digest-dev - efficient cryptographic hash implementations for bytestrings
+libghc-digest-doc - efficient cryptographic hash implementations bytestrings; documentation
+libghc-digest-prof - efficient cryptographic hash implementations bytestrings; profiling libraries
+libghc-io-streams-dev - simple, composable, and easy-to-use stream IO
+libghc-io-streams-doc - simple, composable, and easy-to-use stream IO; documentation
+libghc-io-streams-prof - simple, composable, and easy-to-use stream IO; profiling libraries
+libghc-pipes-zlib-dev - Zlib compression and decompression for Pipes streams
+libghc-pipes-zlib-doc - Zlib compression and decompression for Pipes streams; documentation
+libghc-pipes-zlib-prof - Zlib compression and decompression for Pipes streams; profiling libraries
+libghc-zlib-bindings-dev - low-level bindings to zlib
+libghc-zlib-bindings-doc - low-level bindings to zlib; documentation
+libghc-zlib-bindings-prof - low-level bindings to zlib; profiling libraries
+libghc-zlib-conduit-dev - streaming compression/decompression via conduits
+libghc-zlib-conduit-doc - streaming compression/decompression via conduits; documentation
+libghc-zlib-conduit-prof - streaming compression/decompression via conduits; profiling libraries
+libghc-zlib-dev - Compression and decompression in the gzip and zlib formats
+libghc-zlib-doc - Compression and decompression in the gzip and zlib formats; documentation
+libghc-zlib-enum-dev - enumerator interface for zlib compression
+libghc-zlib-enum-doc - enumerator interface for zlib compression; documentation
+libghc-zlib-enum-prof - enumerator interface for zlib compression; profiling libraries
+libghc-zlib-prof - Compression and decompression in the gzip and zlib formats; profiling libraries
+libgzstream-tulip4.4.0 - gzstream shared library, built for Tulip
+libio-compress-perl - bundle of IO::Compress modules
+libjzlib-java - Java Zlib implementation
+libkaz-dev - Kazlib's reusable data structure development tools
+libkaz1 - Kazlib's reusable data structure modules
+liblz-dbg - data compressor based on the LZMA algorithm (debug)
+liblz-dev - data compressor based on the LZMA algorithm (development)
+liblz1 - data compressor based on the LZMA algorithm (library)
+libnifti-dev - IO libraries for the NIfTI-1 data format
+libnifti2 - IO libraries for the NIfTI-1 data format
+libphp5-embed - HTML-embedded scripting language (Embedded SAPI library)
+libpnglite-dev - lightweight C library for loading and writing PNG images
+libwww-mechanize-gzip-perl - Perl module to fetch webpages with gzip-compression
+libzlcore-data - ZLibrary cross-platform development library (support files)
+libzlcore-dev - ZLibrary cross-platform development library (development files)
+libzlcore0.12 - ZLibrary cross-platform development library (shared library)
+libzltext-data - ZLibrary text model/viewer part (support files)
+libzltext-dev - ZLibrary text model/viewer part (development files)
+libzltext0.12 - ZLibrary text model/viewer part (shared library)
+libzlui-gtk - GTK+ interface module for ZLibrary
+libzlui-qt4 - Qt4 interface module for ZLibrary
+lua-zlib - zlib library for the Lua language
+lua-zlib-dev - zlib development files for the Lua language
+node-zlib - zlib bindings for node.js
+php-text-figlet - PEAR module for rendering text using FIGlet fonts
+php5-fpm - server-side, HTML-embedded scripting language (FPM-CGI binary)
+r-cran-digest - GNU R package for 'hash digest' of R data structures
+tcl-trf - Tcl data transformations - runtime library
+tcl-trf-dev - Tcl data transformations - development files
+tcl-trf-doc - Tcl data transformations - development files
+tightvncserver - virtual network computing server software
+xtightvncviewer - virtual network computing client software for X
+yorick-z - zlib, jpeg and png support for the Yorick language
+zlib-bin - compression library - sample programs
+zlib-gst - Zlib bindings for GNU Smalltalk
+zlibc - An on-fly auto-uncompressing C library
+zopfli - zlib (gzip, deflate) compatible compressor
+zziplib-bin - library providing read access on ZIP-archives - binaries
+libmng1 - Multiple-image Network Graphics library
