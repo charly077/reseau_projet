@@ -69,13 +69,16 @@ int main(int argc, char *argv[]){
 	}
 	
 	
-	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
+	
+
+	//test d'envoie simple
+	if(sendto(sock, "bonjour toi", 11,addr->ai_addr, addr->aiaddrlen)==11) printf("génial ;) :):):):):):):):):):):):):):):):):)"
 	
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 
 	//else ouvrir le fichier correspondant, fdread = descripteur du fichier correspondant ... 
 
-
+	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
 	//FERMETURE DES DESCRIPTEURS :
 
 	//if filename != 0 then fermer le descripteur fdread ATTENTION TODO
