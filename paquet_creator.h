@@ -10,7 +10,7 @@
 
 /*
 *@pre : prend en argument un descripteur de fichier et un pointeur vers un tableau de char. 
-*@post : renvoie 0 si tout vas bien, 1 dans le cas contraire
+*@post : renvoie la taille de ce qui a été écrit ou 0 en cas de problèm
 * 	 Cette fonction remplace *elem par un tableau de char de 512 bytes étant l'élément suivant à envoyer. Dans le cas où un élément à une taille inférieur, il fait 
 *	 un padding avec des 0.
 */
@@ -29,6 +29,6 @@ int file_desc(char *filename);
 *@post : fait pointer le tableau de char *paquet vers un tableau de 520bytes correspondant au paquet suivant, null
 *	 si tous les paquets on été envoyé
 */
-void create_paquet_from_stdin(int desc, char **paquet);
+void create_paquet(int desc, int seq_num, struct msgUDP **paquet);
 
 #endif // fin du header PAQUET_CREATOR_H

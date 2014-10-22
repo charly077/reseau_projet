@@ -7,20 +7,7 @@
 #include <zlib.h>
 #include <string.h>
 
-
-
-//création d'un structure de donnée pour envoyer les messages:
-typedef struct msgUDP{
-	uint8_t Type : 3;
-	uint8_t Window : 5;
-	uint8_t Seq_num;
-	uint16_t Length;
-	char payload[512];//je ne sais pas comment implémenter le payload de 512bytes dans la structure
-	int crc32; //j'ai pris un int parce qu'il a la bonne dimension, c'est a dire 4 bits ... mais normalement uLong crc32
-}__attribute__((packed)) msgUDP;
-
-
-
+#include "struct.h"
 
 int main(int argc, char *argv[]){
 	//VARIABLES ET GESTION DES PARAMETRE:

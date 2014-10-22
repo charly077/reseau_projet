@@ -8,13 +8,6 @@
 #define THREAD_FUNCTION_H
 
 
-struct paquet_to_send{
-	struct paquet *paq; //liste de paquets
-	int nb_elem; //nombre d'elem dans la liste
-	pthread_mutex_t mutex; // protège l'élément
-};
-
-
 /*
 * fonction pour gérer l'envoie des paquets, tant qu'il y a des elem libre dans paquet_to_send, il l'envoie
 * et supprime le pointeur

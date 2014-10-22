@@ -7,24 +7,6 @@
 #ifndef SELECTIVE_REPEAT_H
 #define SELECTIVE_REPEAT_H
 
-/*
-* structure pour gérer la fenetre
-*/
-struct window {
-	char **buffer; // tableau de pointeurs vers les structures contenant les paquets envoyé ainsi que le moment auquel ils ont été envoyé
-	int nb_elem_vide; // pour savoir le nombre d'élément libre dans la fenetre
-	pthread_mutex_t *mutex; // mutex pour proteger l'utilisation des informations contenue dans la fenetre
-};
-
-/*
-* structure pour gérer les paquets dans la fenetre
-*/
-struct paquet {
-	char *paq; //element à envoyer
-	int time; // à modifier lors de la création du timer
-	int ack; // booléan pour dire si l'élément à été ack (1), 0 sinon
-};
-
 
 /*
 *@pre prend la structure windows
