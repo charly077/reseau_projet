@@ -14,10 +14,10 @@
 #define PTYPE_DATA 1
 #define PTYPE_ACK 2
 
-//   1) Problème lors de la compile des crc32 ...
-//   2) Mettre les packets d'IPv6 ?
-//   3) Pq pas mettre SOCK_RAW ?
-//   4) Comment faire pour les numéros de fenêtres / séquence ? 
+//   1) Problème lors de la compilation des crc32 ...				-> ???
+//   2) Mettre les packets d'IPv6 ?									-> pas besoin de les utiliser
+//   3) Pq pas mettre SOCK_RAW ? 									-> parce qu'il faut les droits root
+//   4) Comment faire pour les numéros de fenêtres / séquence ? 	-> compris
 
 //
 //			!!! METTRE LES STRUCTURES EN IPv6 !!!
@@ -30,7 +30,7 @@ typedef struct msgUDP{
 	uint8_t Seq_num;
 	uint16_t Length;
 	char payload[512]; //je ne sais pas comment implémenter le payload de 512bytes dans la structure
-	int crc32;         //j'ai pris un int parce qu'il a la bonne dimension, c'est a dire 4 bits ... mais normalement uLong crc32 -> ouai, bizarre...
+	uLong crc32_1;         
 }__attribute__((packed)) msgUDP;
 
 
@@ -118,13 +118,13 @@ int main(int argc, char *argv[])
 
 
 	// ------------------------------------------------------------------
-	/* Programme proprement dit ::: */
+	// Programme proprement dit :::
     int length_receiv;
     char packet_buf[PACKET_SIZE]; 			// buffer de réception du packet
     char payload_buf[PAYLOAD_SIZE];    		// buffer de réception du payload
     char calculerCRC_buf[WITHOUT_CRC_SIZE]; // Stocker la partie sur laquelle doit être calculée le CRC
 
-    char a[31][PACKET_SIZE]; 				// Largeur de fenêtre totale.
+    char a[256][PACKET_SIZE]; 				// Largeur de fenêtre totale.
     int minimum = 0;    					// Minimum là ou on peut écrire
     int maximum = 15;						// Maximum là ou on peut écrire
 
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
         // On reçoit un packet
         length_receiv = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, (struct sockaddr *) &addr_sender, &addrlen); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
         if (length_receiv == -1) {
-            printf("Problème, le message reçu est trop court...\n" );               /* Ignore failed request */
+            printf("Problème, le message reçu est trop court...\n" );               // Ignore failed request 
         }
 		
 		// On a reçu un buffer qui est en fait un packet. A la base, c'était une structure donc on la caste dans un structure.
@@ -150,10 +150,10 @@ int main(int argc, char *argv[])
         // Vérification du CRC et de si le type est bien 1
 
         uLong crc = crc32(0L, Z_NULL, 0); 											// INT !!!!!!!!!
-        memcpy(calculerCRC_buf, packet_buf, strlen(packet_buf) - 4); 				// Je crée un buffer surlequel je vais pouvoir calculer le CRC
+        memcpy(calculerCRC_buf, packet_buf, strlen(packet_buf) - sizeof(uLong)); 				// Je crée un buffer surlequel je vais pouvoir calculer le CRC
    		crc = crc32(crc, calculerCRC_buf, strlen(calculerCRC_buf));
 		
-		if (crc != packet_struct->crc32 || packet_struct->Type != PTYPE_DATA)
+		if (crc != packet_struct->crc32_1 || packet_struct->Type != PTYPE_DATA)
 		{
 			// discard packet
 			printf("Les 2 CRC ne correspondent pas, le packet doit être discardé \n");
@@ -166,20 +166,20 @@ int main(int argc, char *argv[])
 	        {
 	        	// Le numéro de packet est ok, je peux le sauver dans une des fenêtres !
 	        	// Mettre dans un buffer temporaire qui est dans une fenêtre
-			strcpy(payload_buf, packet_struct->payload);        
-			//payload_buf = packet_struct->payload;
+				strcpy(payload_buf, packet_struct->payload);        
+				//payload_buf = packet_struct->payload;
 
 
-		    // Mettre à jour le lastack
+		    	// Mettre à jour le lastack
 
 
 
-		    // Ecriture dans le fichier	
-		    fwrite(payload_buf, 1, sizeof(payload_buf), fichier);	
-			printf("Nouveau message reçu et sauvé : %s\n", payload_buf);
+		    	// Ecriture dans le fichier	
+		    	fwrite(payload_buf, 1, sizeof(payload_buf), fichier);	
+				printf("Nouveau message reçu et sauvé : %s\n", payload_buf);
 
 
-			// Envoyer ACK
+				// Envoyer ACK
 
 	        }
 	        
