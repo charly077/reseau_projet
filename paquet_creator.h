@@ -7,7 +7,7 @@
 #ifndef PAQUET_CREATOR_H
 #define PAQUET_CREATOR_H
 
-
+#include "struct.h"
 /*
 *@pre : prend en argument un descripteur de fichier et un pointeur vers un tableau de char. 
 *@post : renvoie la taille de ce qui a été écrit ou 0 en cas de problèm
