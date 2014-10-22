@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "struct.h"
-
+#include "paquet_creator.h"
 int main(int argc, char *argv[]){
 	//VARIABLES ET GESTION DES PARAMETRE:
 	int i = 1;
@@ -71,8 +71,11 @@ int main(int argc, char *argv[]){
 	
 	
 
-	//test d'envoie simple
-	if(sendto(sock, "bonjour toi", 11,0,addr->ai_addr, addr->ai_addrlen)==11) printf("génial ;) :):):):):):):):):):):):):):):):):)");
+	//test d'envoi d'un paquet : 
+	int desc = file_desc("coucou1.txt");
+	struct msgUDP *msg;
+	create_paquet(desc, 0, &msg);
+	if(sendto(sock, msg, sizeof(struct msgUDP),0,addr->ai_addr, addr->ai_addrlen)==sizeof(struct msgUDP)) printf("message envoyé :)\n");
 	
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 
