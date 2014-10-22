@@ -63,7 +63,7 @@ int main(int argc, char *argv[]){
 		close(sock); // si on est pas sorti de la boucle il faut fermer le socket
 	}
 
-	if (addr = NULL){
+	if (addr == NULL){
 		fprintf(stderr, "Impossible de se connecter\n");
 		exit(EXIT_FAILURE);
 	}
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
 	
 
 	//test d'envoie simple
-	if(sendto(sock, "bonjour toi", 11,addr->ai_addr, addr->aiaddrlen)==11) printf("génial ;) :):):):):):):):):):):):):):):):):)"
+	if(sendto(sock, "bonjour toi", 11,0,addr->ai_addr, addr->ai_addrlen)==11) printf("génial ;) :):):):):):):):):):):):):):):):):)");
 	
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 
