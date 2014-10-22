@@ -13,7 +13,7 @@
 #include "struct.h"
 
 #define TAILLE_PAYLOAD 512
-
+/* TEST
 int main(int argc, char *argv[]){
 	int fd = file_desc("coucou1.txt");
 	char *buf = NULL;
@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
 
 	return 0;
 }
+*/
 
 int tab_512b(int desc, char **elem){
 	char *buf = (char *) malloc(TAILLE_PAYLOAD); // allouer une place de 512 bytes pour le contenu de l'élément

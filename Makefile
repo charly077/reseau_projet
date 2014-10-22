@@ -2,14 +2,19 @@
 #  Makefile pour le projet de réseau 2014
 #
 
-GCC = gcc
+GCC = clang
 AR = ar
 ARFLAGS = -cvq
-CFLAGS = -Wall -std=c99 -g -c
+CFLAGS =  -g -c
 LDFLAGS = --static -g
 
-sender: sender.c
-	$(GCC) sender.c -Wall -std=c99 -g -o sender
-	./sender
+sender: sender.c struct.h paquet_creator.o
+	$(GCC) sender.c -lz  -g -o sender paquet_creator.o 
+	
+
+paquet_creator.o : paquet_creator.h struct.h paquet_creator.c
+	$(GCC) $(CFLAGS) paquet_creator.c
+
+
 clean:
-	rm sender
+	rm ./sender *.o
