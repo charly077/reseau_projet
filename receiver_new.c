@@ -7,12 +7,15 @@
 #include <stdint.h>     // Pour les uint8_t, ...
 #include <netdb.h> 	   // à importer pour le getaddrinfo (surtout les structures avant)
 
+#include "struct.h"
+
 #define PACKET_SIZE 520
 #define PAYLOAD_SIZE 512
 #define WITHOUT_CRC_SIZE 516
 #define PTYPE_DATA 1
 #define PTYPE_ACK 2
 
+// METTRE LA LONGUEUR DES MESSAGES ENVOYE A +1 !!! pour qu'il mette le 
 int main(int argc, char *argv[])
 {
     struct addrinfo hints;
@@ -87,53 +90,63 @@ int main(int argc, char *argv[])
 
     // ------------------------------------------------------------------
 	// Programme proprement dit :::
-    /*
+    
     int length_receiv = PACKET_SIZE;
     char packet_buf[PACKET_SIZE]; 			// buffer de réception du packet
-    char payload_buf[PAYLOAD_SIZE];    		// buffer de réception du payload
-    char calculerCRC_buf[WITHOUT_CRC_SIZE]; // Stocker la partie sur laquelle doit être calculée le CRC
+    char payload_buf[PACKET_SIZE]; // PAYLOAD_SIZE    		// buffer de réception du payload
 
-    while(length_receiv == PACKET_SIZE) 
+    char buffer_tot[255][PACKET_SIZE];
+    int minimum = 0;    					// Minimum là ou on peut écrire
+    int maximum = 15;						// Maximum là ou on peut écrire
+    int lastack	= 0;						// Suivant attendu 
+
+    // Ouvrir le fichier
+	FILE *fichier = fopen(filename, "w");
+	if (fichier == NULL)
+	{
+    	printf("Error opening file!\n");
+    	exit(1);
+	}
+
+	int j = 0;
+    while(length_receiv > 5) // définir un cran d'arrêt
     {
     	// On reçoit un packet
-        length_receiv = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, adresse_sender->ai_addr, &(adresse_sender->ai_addrlen)); //(struct sockaddr *) &addr_sender, &addrlen); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
+        length_receiv = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, rp->ai_addr, &(rp->ai_addrlen)); //(struct sockaddr *) &addr_sender, &addrlen); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
         if (length_receiv == -1) {
             printf("Problème, le message reçu est trop court...\n" );               // Ignore failed request 
         }
 
         // On a reçu un buffer qui est en fait un packet. A la base, c'était une structure donc on la caste dans un structure.
         // !!!!! PAS OPTIMISE, declarer le struct a l'exterieur de la boucle
-        struct msgUDP *packet_struct = (struct msgUDP *) packet_buf;
-
-        strcpy(payload_buf, packet_struct->payload);
-        printf("message : %s\n", payload_buf);
-
-    }
-    */
-    /* Read datagrams and echo them back to sender */
-    /*
-    for (;;) {
-        peer_addr_len = sizeof(struct sockaddr_storage);
-        nread = recvfrom(sockett, buf, BUF_SIZE, 0,
-                (struct sockaddr *) &peer_addr, &peer_addr_len);
-        if (nread == -1)
-            continue;               // Ignore failed request 
-
-        char host[NI_MAXHOST], service[NI_MAXSERV];
-
-        s = getnameinfo((struct sockaddr *) &peer_addr,
-                        peer_addr_len, host, NI_MAXHOST,
-                        service, NI_MAXSERV, NI_NUMERICSERV);
-       if (s == 0)
-            printf("Received %ld bytes from %s:%s\n",
-                    (long) nread, host, service);
+        //struct msgUDP *packet_struct = (struct msgUDP *) packet_buf;
+        strcpy(payload_buf, packet_buf);
+        // Ecriture dans le fichier	
+        //fprintf(fichier, "%s\n", payload_buf);
+        if(j >= minimum && j <= maximum)
+        {
+        	strcpy(buffer_tot[j], payload_buf);
+        	if (j == minimum)
+        	{
+        		lastack++;
+        		minimum++;
+        		maximum++;
+        	}
+        	j++; 																	// A supprimer
+        }
         else
-            fprintf(stderr, "getnameinfo: %s\n", gai_strerror(s));
+        {
+        	printf("packet discardé car numéro hors de la fenêtre\n");
+        }
+		
+		printf("Nouveau message reçu de longueur: %d\n", length_receiv);
 
-        if (sendto(sockett, buf, nread, 0,
-                    (struct sockaddr *) &peer_addr,
-                    peer_addr_len) != nread)
-            fprintf(stderr, "Error sending response\n");
     }
-    */
+
+    fprintf(fichier, "%s\n", buffer_tot[0]);
+    fprintf(fichier, "%s\n", buffer_tot[1]);
+    fprintf(fichier, "%s\n", buffer_tot[2]);
+
+
+    fclose(fichier);
 }
