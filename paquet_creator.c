@@ -46,5 +46,5 @@ void create_paquet(int desc,int seq_num, struct msgUDP ** paquet){
 	strncpy(new_paquet->payload, payload, 512);
 
 	//calcul du crc sur tout le contenu sauf lui mm
-	new_paquet->crc32 = crc32( ??????
+	new_paquet->crc32 = crc32( 0, new_paquet, sizeof(msgUDP) - sizeof(uLong));
 }
