@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <errno.h>
-
+#include <string.h>
 
 
 #include "struct.h"
@@ -21,7 +21,7 @@ void ack_recu(int n_seq, struct window *win){
 	//parcourir toute la window, pour voir si le paquet est dedans
 	int i;
 	struct paquet *paq;
-	for(i=0, i< win->nb_elem, i++){
+	for(i=0; i< win->nb_elem; i++){
 		paq = win->buffer +i;
 		if ((paq->msg)->seq_num == n_seq){
 			paq->ack =1;
@@ -39,7 +39,7 @@ void ack_recu(int n_seq, struct window *win){
 }
 
 
-void send_window(struct window *win, int sock, int last_seq_num,int *fini_send,int sock, struct addrinfo *addr){
+void send_window(struct window *win, int fd, int last_seq_num,int *fini_send,int sock, struct addrinfo *addr){
 	if(can_send(win) == 0){
 		return;
 	}
@@ -49,13 +49,13 @@ void send_window(struct window *win, int sock, int last_seq_num,int *fini_send,i
 		 	struct msgUDP *msg;
 			create_paquet(fd,last_seq_num + i ,&msg,fini_send);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));
-			paq.ack = 0;
-			paq.msg = msg;
+			paq->ack = 0;
+			paq->msg = msg;
 			((win->buffer)+(win->nb_elem)-(win->nb_elem_vide)) = paq;
 			// envoie du paquet
 			int nb = sendto(sock, msg, sizeof(struct msgUDP), 0, addr->ai_addr,addr->ai_addrlen);
 			if(nb != sizeof(msgUDP)){
-				printf(stderr, "il y a eu une erreur lors de l'envoie d'un messageUDP \n%s\n", strerror(errno));
+				fprintf(stderr, "il y a eu une erreur lors de l'envoie d'un messageUDP \n%s\n", strerror(errno));
 			}
 			win->nb_elem_vide --;
 			i++;
