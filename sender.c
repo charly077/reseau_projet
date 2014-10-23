@@ -13,6 +13,7 @@
 
 #include "struct.h"
 #include "paquet_creator.h"
+#include "selective_repeat.h"
 
 #define TIMER 2 // définition du timer pour réenvoyer le premier parquet de la window 
 
@@ -28,6 +29,8 @@ int main(int argc, char *argv[]){
 	int s; // pour gérer les erreur de getaddrinfo
 	int sock; // pour définir le socket
 
+	struct window *win; // la window
+
 	int select_result; // pour stocker le résultat du select()
 	fd_set read_ack; // pour le select()
 	struct timeval timeout; // timeout pour le select(), dès qu'il sera expiré, on saura qu'il faut réenvoyer le premier element de la window
@@ -36,6 +39,8 @@ int main(int argc, char *argv[]){
 	int fini_send = 0; // géré lorsqu'on crée des paquets, si la taille <512bytes alors on sait qu'on ne doit plus créer de paquets
 
 	int fd; // file descriptor du fichier ou de stdin
+	int window_size; // permet de gérer les changement de taille de window
+	int next_seq_num=0;
 
 
 	while(i<argc){
@@ -102,17 +107,22 @@ int main(int argc, char *argv[]){
 		desc = 0;
 	}
 
-	//else ouvrir le fichier correspondant, fdread = descripteur du fichier correspondant ... 
+	//création de la window:
+	create_window(&win, window_size);
 
-	// LE DEBUT DU COMMENCEMENT 
 	//création du timeout pour select:
 	timeout.tv_sec = 0;
 	timeout.tv_usec = TIMER * 1000; // timer défini en define en ms
 
+
 	while(fini == 0){
 		//d'abord envoyer ... --> faire fonction ds le selective repeat
-		if(fini_send == 0){ 
-			send_window(); // à implémenter ; envoyer un élément si il y en a encore à envoyer ...
+		if(fini_send == 0 && win->nb_elem == window_size){ 
+			send_window(win,sock,next_seq_num); // à implémenter ; envoyer un élément si il y en a encore à envoyer
+			next_seq_num ++;
+		}
+		else if (fini_send == 0 && (win->nb_elem)!=window_size){
+			window_resize(win, window_size);
 		}
 		do{
 			FD_ZERO(&read_ack);
@@ -125,11 +135,25 @@ int main(int argc, char *argv[]){
 		}	
 		else if (select_result == 0){
 			//ça signifie que le timer a expiré, il faut donc réenvoyer le premier élément de la liste
-			send_first_in_window();
+			int size_sendto = sendto(sock, (win->buffer)->msg,0,addr->ai_addr,addr->ai_addrlen);
+			if(size_sendto != sizeof(struct msgUDP)){
+				fprintf(stderr, "il y a une erreur lors de l'envoie d'un message après timer select:\n%s\n",strerror(errno);
+			}
 		}
 		else if(select_result>0 && FD_ISSET(sock,&read_sock)) {
 			//ça veut dire que j'ai recu un ack
-			analyse_ack(); // fonction à creer dans window
+			struct msgUDP msg;
+			int size_recv =  recvfrom(sock, (void *) &msg, sizeof(struct msgUDP),0, addr->ai_addr, &(addr->ai_addrlen));
+			if(size_recv != sizeof(struct msgUDP)){
+				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n",strerror(errno));
+				exit(EXIT_FAILURE);
+			}
+			window_size = (int)msg.window; // attention vérif conversion
+			ack_recu(msg.seq_num, win);
+
+			if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
+				fini =1; // fin de l'envoie
+
 		}		
 	} // fin boucle pour d'envoi
 

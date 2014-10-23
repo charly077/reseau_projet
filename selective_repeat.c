@@ -9,6 +9,7 @@
 
 #include "struct.h"
 #include "paquet_creator.h"
+#include "selective_repeat.h"
 
 
 
@@ -38,7 +39,7 @@ void ack_recu(int n_seq, struct window *win){
 }
 
 
-void send_window(struct window *win, int fd, int last_seq_num,int *fini_send,int sock, struct addrinfo *addr){
+void send_window(struct window *win, int sock, int last_seq_num,int *fini_send,int sock, struct addrinfo *addr){
 	if(can_send(win) == 0){
 		return;
 	}
@@ -68,6 +69,17 @@ void create_window(struct window **win, int buffer_size){
 	*win->buffer = (struct paquet *) malloc(sizeof(struct paquet *) * buffer_size);
 	*win->nb_elem_vide = buffer_size;
 	*win->nb_elem = buffer_size;
+}
+
+void window_resize(struct window *win, int buffer_size){
+	if(((win->nb_elem)-(win->nb_elem_vide)) <= buffer_size){ // si ces condition il y a déjà plus d element envoyé que la nouvelle taille, on attend ...
+		struct paquet *new_buff = (struct paquet *) malloc(sizeof(struct paquet *));
+		strcpy(new_buff, win->buffer, sizeof(struct paquet *) * ((win->nb_elem)-(win->nb_elem_vide)));
+		free(win->buffer);
+		(win->buffer) = new_buff;
+		win->nb_elem_vide = buffer_size - ((win->nb_elem)-(win->nb_elem_vide));
+		win->nb_elem = buffer_size;
+	}
 }
 
 void free_window(struct window *win){
