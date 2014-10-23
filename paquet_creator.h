@@ -7,6 +7,10 @@
 #ifndef PAQUET_CREATOR_H
 #define PAQUET_CREATOR_H
 
+#define PTYPE_DATA 1
+#define PTYPE_ACK 2
+
+
 #include "struct.h"
 /*
 *@pre : prend en argument un descripteur de fichier et un pointeur vers un tableau de char. 
