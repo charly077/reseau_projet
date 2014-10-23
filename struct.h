@@ -7,7 +7,6 @@
 #ifndef STRUCT_H
 #define STRUCT_H
 
-#include <pthread.h>
 #include <zlib.h>
 
 
@@ -27,9 +26,9 @@ typedef struct msgUDP{
 * structure pour gérer la fenetre
 */
 struct window {
-	char **buffer; // tableau de pointeurs vers les structures contenant les paquets envoyé ainsi que le moment auquel ils ont été envoyé
+	struct paquet *buffer; // tableau de pointeurs vers les structures contenant les paquets envoyé ainsi que le moment auquel ils ont été envoyé
 	int nb_elem_vide; // pour savoir le nombre d'élément libre dans la fenetre
-	pthread_mutex_t *mutex; // mutex pour proteger l'utilisation des informations contenue dans la fenetre
+	int nb_elem;
 };
 
 
@@ -37,8 +36,7 @@ struct window {
 * structure pour gérer les paquets dans la fenetre
 */
 struct paquet {
-	char *paq; //element à envoyer
-	int time; // à modifier lors de la création du timer
+	struct msgUDP *msg; //element à envoyer
 	int ack; // booléan pour dire si l'élément à été ack (1), 0 sinon
 };
 
@@ -46,7 +44,6 @@ struct paquet {
 struct paquet_to_send{
 	struct paquet *paq; //liste de paquets
 	int nb_elem; //nombre d'elem dans la liste
-	pthread_mutex_t mutex; // protège l'élément
 };
 
 #endif // fin du header STRUCT_H
