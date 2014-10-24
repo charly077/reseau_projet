@@ -47,16 +47,17 @@ int file_desc(char *filename){
 	return fd; // ATTENTION ne pas oublier de fermer le file_desc
 }
 
-void create_paquet(int desc, int seq_num, struct msgUDP **paquet){
+void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send){
 	char *payload;
 	int size = tab_512b(desc, &payload);
 	struct msgUDP *new_paquet = (struct msgUDP *) malloc(sizeof(struct msgUDP));
-	new_paquet->type = 1;
+	new_paquet->type = PTYPE_DATA;
 	new_paquet->window=0;
 	new_paquet->seq_num = seq_num;
 	new_paquet->length = size; // taille de l'élément et donc si c'est le dernier paquet la taille est <à 512bytes
 	strncpy(new_paquet->payload, payload, 512);
-
+	//ATTENTION, si size <512, c'est qu'on a envoyé le dernier paquet donc on arrête le programme
+	if(size <512) *fini_send = 1;
 	//calcul du crc sur tout le contenu sauf lui mm
 	new_paquet->crc32 = crc32( 0, (void *)new_paquet, sizeof(msgUDP) - sizeof(uLong));
 }
