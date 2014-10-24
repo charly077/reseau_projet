@@ -90,17 +90,22 @@ int main(int argc, char *argv[])
     // ------------------------------------------------------------------
 	// Programme proprement dit :::
     
-    uint16_t length_receiv = PACKET_SIZE;
-    int nbre_bits_recu;
+    int longueur_recu = PAYLOAD_SIZE;
     char packet_buf[PACKET_SIZE]; 			// buffer de réception du packet
     char payload_buf[PAYLOAD_SIZE]; // PAYLOAD_SIZE    		// buffer de réception du payload
+    char ack_buf[PACKET_SIZE];
 
     struct msgUDP *packet_struct= NULL;
 
     char buffer_tot[255][PACKET_SIZE];
-    int minimum = 0;    					// Minimum là ou on peut écrire
-    int maximum = 15;						// Maximum là ou on peut écrire
-    int lastack	= 0;						// Suivant attendu 
+    memset(buffer_tot, 0, sizeof(buffer_tot)); // Pour pouvoir le comparer au char c afin de déterminer là ou il y a des données et calculer le lastack
+    int maximum = 15;						// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
+    int lastack	= -1;						// Dernier qu'on a reçu
+    int attendu = 0;						// C'est celui attendu (= lastack + 1)
+    int minimum = attendu;					// Minimum de la fenêtre d'acceptation des paquets
+
+    char c[1];								// Pour trouver les endroits ou il y a rien sur le buffer_tot
+    memset(c, 0, sizeof(c));
 
     // Ouvrir le fichier
 	FILE *fichier = fopen(filename, "w");
@@ -110,74 +115,105 @@ int main(int argc, char *argv[])
     	exit(1);
 	}
 
+	// Préparation de l'accusé
+	memset(ack_buf, 0, PACKET_SIZE); // Remet à 0 la zone d'accusé
+	struct msgUDP *ack_struct = (struct msgUDP *) ack_buf;
+	ack_struct->type = PTYPE_ACK;
+	ack_struct->window = 15;
+	ack_struct->seq_num = 0;
+	ack_struct->length = PAYLOAD_SIZE;
+	// Pas besoin pour le payload puisqu'il est déjà à 0
+	ack_struct->crc32 = 0;
+
 	int j = 0; 
 	int h = 0;
-    while(length_receiv == PACKET_SIZE && h < 3) // définir un cran d'arrêt
+    while(longueur_recu == PAYLOAD_SIZE)
     {
     	printf("On est dans la boucle !\n");
     	h++;
     	// On reçoit un packet
-        nbre_bits_recu = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, rp->ai_addr, &(rp->ai_addrlen)); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
-        if (nbre_bits_recu == -1) {
-            printf("Problème, le message reçu n'est pas valide...\n" );               // Ignore failed request 
+        longueur_recu = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, rp->ai_addr, &(rp->ai_addrlen)); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
+        if (longueur_recu == -1) {
+            printf("Problème, le message reçu n'est pas valide...\n" );            
         }
 
         // On a reçu un buffer qui est en fait un packet. A la base, c'était une structure donc on la caste dans un structure.
         packet_struct = (struct msgUDP *) packet_buf;
 
         // Checker Type et CRC
-        
-        uLong crc = crc32(0L, Z_NULL, 0); 											// INT !!!!!!!!!
-        memcpy(calculerCRC_buf, packet_buf, strlen(packet_buf) - sizeof(uLong)); 				// Je crée un buffer surlequel je vais pouvoir calculer le CRC
-   		crc = crc32(crc, calculerCRC_buf, strlen(calculerCRC_buf));
+        uLong crc = crc32(0L, Z_NULL, 0);
+   		crc = crc32(crc, packet_buf, strlen(packet_buf) - sizeof(uLong));
+
 		if (crc != packet_struct->crc32)
 		{
 			
-			// Le CRC n'est pas bon
-			// Le packet a été discardé
+			// Le CRC n'est pas bon, le paquet doit être discardé
+			printf("Les CRC ne correspondent pas, le packet va être discardé\n");
 		}
-		else
+		else 
 		{
-
+			// Si on est ici, c'est que les CRC correspondent
 			
+			// Copie de tous les éléments requis depuis la structure
+	        strcpy(payload_buf, packet_struct->payload);
+	        j = packet_struct->seq_num;
+	        longueur_recu = packet_struct->length;
+
 			// Vérification de si c'est la fin des packets
-	        if (packet_struct->length < PAYLOAD_SIZE)
+	        if (longueur_recu < PAYLOAD_SIZE)
 	        {
 	        	printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
 	        	break;
 	        }
-			
-	        // Copie de tous les éléments requis depuis la structure
-	        strcpy(payload_buf, packet_struct->payload);
-	        j = packet_struct->seq_num;
-	        
+
+	        // Gestion du stockage de l'élément en fonction de là ou est la fenêtre !!!
 	        if(j >= minimum && j <= maximum && packet_struct->type == PTYPE_DATA)
 	        {
 	        	// Copie dans le buffer
 	        	strcpy(buffer_tot[j], payload_buf);
-
-	        	// Si c'est le plus petit élément, alors on déplace la fenêtre et on l'écrit dans le fichier.
-	        	if (j == minimum)
-	        	{
-	        		// Ecriture dans le fichier	
-	        		fprintf(fichier, "%s\n", buffer_tot[minimum]);
-	        		lastack++;
-	        		minimum++;
-	        		maximum++;
-	        	}
-	        	j++;																// A supprimer
+	        }
+	        else if (maximum < minimum && j >= minimum && packet_struct->type == PTYPE_DATA)
+	        {
+	        	// Ok aussi, ça veut dire que max = 13, min = 252 et j = 254
+	        	strcpy(buffer_tot[j], payload_buf);
+	        }
+	        else if (maximum < minimum && j <= maximum && packet_struct->type == PTYPE_DATA)
+	        {
+	        	// Ok aussi, ça veut dire que max = 13, min = 252 et j = 8
+	        	strcpy(buffer_tot[j], payload_buf);
 	        }
 	        else
 	        {
 	        	printf("packet discardé car numéro hors de la fenêtre\n");
 	        }
 			
+			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
+				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
+			printf("Contenu : %s\n", payload_buf);
+		}
 
-	        // ENVOYER ACK
+		// Actualisation des variables							
+		while(strncmp(buffer_tot[attendu] , c,  1) != 0) 					// Temps que le attendu est rempli
+		{
+			fprintf(fichier, "%s\n", buffer_tot[attendu]); 					// Copie dans le fichier
+			memset(buffer_tot[attendu], 0, sizeof(buffer_tot[attendu])); 	// On remet à 0
 
-			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d et le CRC est %s \n", 
-				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length, packet_struct->crc32);
-			printf("Contenu : %s\n", packet_struct->payload_buf);
+			lastack = attendu;												// lastack = attendu
+			attendu = (attendu + 1) % 256;									// attendu++
+			minimum = attendu;												// minimum = attendu
+			maximum = (maximum + 1) % 256;									// maximum++
+		}
+
+		// Envoyer un ACK
+		ack_struct->seq_num = lastack;
+
+		uLong crcAck = crc32(0L, Z_NULL, 0);
+		crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));
+		ack_struct->crc32 = crcAck;
+
+		if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
+		{
+			printf("Accusé envoyé avec numéro : %d\n", lastack);
 		}
 
     }
