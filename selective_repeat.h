@@ -27,7 +27,7 @@ void ack_recu(int n_seq, struct window *win);
 *	à jour si on le fichier est terminé, un int représentant le socket_fd, 
 *@post si on ne peut pas envoyer d'élem, *paq est mis à null sinon, contient un pointeur vers une structure d'un paquet
 */
-void send_window(struct window *win, int fd, int *next_seq_num, int *fini_send,int sock, struct addrinfo *addr );
+void send_window(struct window *win, int fd, int *next_seq_num, int *fini_send,int sock, struct addrinfo *addr, int sber,int splr);
 
 /*
 * @pre : un pointeur vers un pointeur sur la fenetre, et la taille du buffer

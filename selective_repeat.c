@@ -43,7 +43,7 @@ void ack_recu(int n_seq, struct window *win){
 }
 
 
-void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr){
+void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr){
 	if(can_send(win) == 0 && *fini_send == 1){
 		return;
 	}
@@ -51,16 +51,20 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 		int i = 0;
 		 while(win->nb_elem_vide >0 && *fini_send !=1){
 		 	struct msgUDP *msg;
-			create_paquet(fd,*next_seq_num ,&msg,fini_send);
+			create_paquet(fd,*next_seq_num ,&msg,fini_send,sber);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));
 			paq->ack = 0;
 			paq->msg = msg;
 			*((win->buffer)+(win->nb_elem)-(win->nb_elem_vide)) = paq;
 			// envoie du paquet
-			int nb = sendto(sock, msg, sizeof(struct msgUDP), 0, addr->ai_addr,addr->ai_addrlen);
-			if(nb != sizeof(struct msgUDP)){
-				fprintf(stderr, "il y a eu une erreur lors de l'envoie d'un messageUDP \n%s\ntaille msgUDP = %lu, taille envoyé = %d\n", strerror(errno), sizeof(struct msgUDP), nb);
+			if(random()%100 > splr)
+			{
+				int nb = sendto(sock, msg, sizeof(struct msgUDP), 0, addr->ai_addr,addr->ai_addrlen);
+				if(nb != sizeof(struct msgUDP)){
+					fprintf(stderr, "il y a eu une erreur lors de l'envoie d'un messageUDP \n%s\ntaille msgUDP = %lu, taille envoyé = %d\n", strerror(errno), sizeof(struct msgUDP), nb);
+				}
 			}
+
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
 			(*next_seq_num) ++;

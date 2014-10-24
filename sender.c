@@ -105,7 +105,7 @@ int main(int argc, char *argv[]){
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 	if(filenamegive == 1) fd = file_desc(filename);
 	else {
-	fd = 0;
+	fd = STDIN_FILENO;
 	}
 
 	//création de la window:
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
 	while(fini == 0){
 		//d'abord envoyer ... --> faire fonction ds le selective repeat
 		if(fini_send == 0 && win->nb_elem == window_size){ 
-			send_window(win,fd, &next_seq_num, &fini_send, sock,addr); // à implémenter ; envoyer un élément si il y en a encore à envoyer
+			send_window(win,fd, &next_seq_num, &fini_send, sock,addr,sber, splr); // à implémenter ; envoyer un élément si il y en a encore à envoyer
 			next_seq_num ++;
 		}
 		else if (fini_send == 0 && (win->nb_elem)!=window_size){
@@ -150,13 +150,15 @@ int main(int argc, char *argv[]){
 			int size_recv =  recvfrom(sock, (void *) &msg, sizeof(struct msgUDP),0, addr->ai_addr, &(addr->ai_addrlen));
 			if(size_recv != sizeof(struct msgUDP)){
 				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n%lu!=%d",strerror(errno),sizeof(struct msgUDP), size_recv);
-				exit(EXIT_FAILURE);
+				//exit(EXIT_FAILURE);
 			}
-			window_size = (int)msg.window; // attention vérif conversion
-			ack_recu(msg.seq_num - 1, win);// il faut faire moins 1
-			printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg.seq_num);
-			if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
-				fini =1; // fin de l'envoie
+			else if(msg.type == PTYPE_ACK){ // uniquement si c'est bien un ack 
+				window_size = (int)msg.window; // attention vérif conversion
+				ack_recu(msg.seq_num - 1, win);// il faut faire moins 1
+				printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg.seq_num);
+				if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
+					fini =1; // fin de l'envoie
+			}
 
 		}		
 	} // fin boucle pour d'envoi

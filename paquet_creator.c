@@ -47,7 +47,7 @@ int file_desc(char *filename){
 	return fd; // ATTENTION ne pas oublier de fermer le file_desc
 }
 
-void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send){
+void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send, int sber){
 	char *payload;
 	int size = tab_512b(desc, &payload);
 	printf("the payload (taille est de %d) is : \n%s\n\n\n\n",size, payload);
@@ -62,5 +62,10 @@ void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send
 	printf("fini_send = %d\n",*fini_send);
 	//calcul du crc sur tout le contenu sauf lui mm
 	new_paquet->crc32 = crc32( 0, (void *)new_paquet, sizeof(msgUDP) - sizeof(uLong));
+	//ajout des erreur sber
+	if(random()%1000 < sber){
+		new_paquet->payload[0] ^= 0xff; // inverse le premier bit
+	}
+	*paquet =new_paquet;
 }
 

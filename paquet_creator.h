@@ -33,6 +33,6 @@ int file_desc(char *filename);
 *@post : fait pointer le tableau de char *paquet vers un tableau de 520bytes correspondant au paquet suivant, null
 *	 si tous les paquets on été envoyé
 */
-void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send);
+void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send, int sber);
 
 #endif // fin du header PAQUET_CREATOR_H
