@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 		crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));
 		ack_struct->crc32 = crcAck;
 
-		if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, &(rp->ai_addrlen)) == sizeof(struct msgUDP))
+		if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
 		{
 			printf("Accusé envoyé avec numéro : %d\n", lastack);
 		}
