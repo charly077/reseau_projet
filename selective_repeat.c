@@ -33,7 +33,7 @@ void ack_recu(int n_seq, struct window *win){
 		win->nb_elem_vide ++;
 		free((win->buffer)->msg); // libere l'espace du msgUDP
 		free(*(win->buffer)); // le but est de libéré la mémoire, win->buffer me renvoie un tableau de pointeur, je prends le premier element pour le free (pas sur)
-		strcpy((win->buffer),(win->buffer)+1, ((win->nb_elem)-1) * sizeof(struct paquet *));
+		strncpy((win->buffer),(win->buffer)+1, ((win->nb_elem)-1) * sizeof(struct paquet *));
 		
 	}
 }
@@ -65,16 +65,16 @@ void send_window(struct window *win, int fd, int last_seq_num,int *fini_send,int
 
 
 void create_window(struct window **win, int buffer_size){
-	*win = (struct window *) malloc(struct window);
-	*win->buffer = (struct paquet *) malloc(sizeof(struct paquet *) * buffer_size);
-	*win->nb_elem_vide = buffer_size;
-	*win->nb_elem = buffer_size;
+	*win = (struct window *) malloc(sizeof(struct window));
+	(*win)->buffer = (struct paquet *) malloc(sizeof(struct paquet *) * buffer_size);
+	(*win)->nb_elem_vide = buffer_size;
+	(*win)->nb_elem = buffer_size;
 }
 
 void window_resize(struct window *win, int buffer_size){
 	if(((win->nb_elem)-(win->nb_elem_vide)) <= buffer_size){ // si ces condition il y a déjà plus d element envoyé que la nouvelle taille, on attend ...
 		struct paquet *new_buff = (struct paquet *) malloc(sizeof(struct paquet *));
-		strcpy(new_buff, win->buffer, sizeof(struct paquet *) * ((win->nb_elem)-(win->nb_elem_vide)));
+		strncpy((void *)new_buff, (void *)win->buffer, sizeof(struct paquet *) * ((win->nb_elem)-(win->nb_elem_vide)));
 		free(win->buffer);
 		(win->buffer) = new_buff;
 		win->nb_elem_vide = buffer_size - ((win->nb_elem)-(win->nb_elem_vide));
