@@ -126,52 +126,59 @@ int main(int argc, char *argv[])
         packet_struct = (struct msgUDP *) packet_buf;
 
         // Checker Type et CRC
-        /*
+        
         uLong crc = crc32(0L, Z_NULL, 0); 											// INT !!!!!!!!!
         memcpy(calculerCRC_buf, packet_buf, strlen(packet_buf) - sizeof(uLong)); 				// Je crée un buffer surlequel je vais pouvoir calculer le CRC
    		crc = crc32(crc, calculerCRC_buf, strlen(calculerCRC_buf));
-		*/
+		if (crc != packet_struct->crc32)
+		{
+			
+			// Le CRC n'est pas bon
+			// Le packet a été discardé
+		}
+		else
+		{
 
-		// Vérification de si c'est la fin des packets
-        if (packet_struct->length < PAYLOAD_SIZE)
-        {
-        	printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
-        	break;
-        }
-		
-        // Copie de tous les éléments requis depuis la structure
-        strcpy(payload_buf, packet_struct->payload);
-        j = packet_struct->seq_num;
-        
-        if(j >= minimum && j <= maximum && packet_struct->type == PTYPE_DATA)
-        {
-        	// Copie dans le buffer
-        	strcpy(buffer_tot[j], payload_buf);
+			
+			// Vérification de si c'est la fin des packets
+	        if (packet_struct->length < PAYLOAD_SIZE)
+	        {
+	        	printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
+	        	break;
+	        }
+			
+	        // Copie de tous les éléments requis depuis la structure
+	        strcpy(payload_buf, packet_struct->payload);
+	        j = packet_struct->seq_num;
+	        
+	        if(j >= minimum && j <= maximum && packet_struct->type == PTYPE_DATA)
+	        {
+	        	// Copie dans le buffer
+	        	strcpy(buffer_tot[j], payload_buf);
 
-        	// Si c'est le plus petit élément, alors on déplace la fenêtre et on l'écrit dans le fichier.
-        	if (j == minimum)
-        	{
-        		// Ecriture dans le fichier	
-        		fprintf(fichier, "%s\n", buffer_tot[minimum]);
-        		lastack++;
-        		minimum++;
-        		maximum++;
-        	}
-        	j++;																// A supprimer
-        }
-        else
-        {
-        	printf("packet discardé car numéro hors de la fenêtre\n");
-        }
-		
+	        	// Si c'est le plus petit élément, alors on déplace la fenêtre et on l'écrit dans le fichier.
+	        	if (j == minimum)
+	        	{
+	        		// Ecriture dans le fichier	
+	        		fprintf(fichier, "%s\n", buffer_tot[minimum]);
+	        		lastack++;
+	        		minimum++;
+	        		maximum++;
+	        	}
+	        	j++;																// A supprimer
+	        }
+	        else
+	        {
+	        	printf("packet discardé car numéro hors de la fenêtre\n");
+	        }
+			
 
-        // ENVOYER ACK
+	        // ENVOYER ACK
 
-		printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d et le CRC est %s \n", 
-			packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length, packet_struct->crc32);
-		printf("Contenu : %s\n", packet_struct->payload_buf);
-
-
+			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d et le CRC est %s \n", 
+				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length, packet_struct->crc32);
+			printf("Contenu : %s\n", packet_struct->payload_buf);
+		}
 
     }
 
