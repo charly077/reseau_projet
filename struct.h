@@ -26,7 +26,7 @@ typedef struct msgUDP{
 * structure pour gérer la fenetre
 */
 struct window {
-	struct paquet *buffer; // tableau de pointeurs vers les structures contenant les paquets envoyé ainsi que le moment auquel ils ont été envoyé
+	struct paquet **buffer; // tableau de pointeurs vers les structures contenant les paquets envoyé ainsi que le moment auquel ils ont été envoyé
 	int nb_elem_vide; // pour savoir le nombre d'élément libre dans la fenetre
 	int nb_elem;
 };
