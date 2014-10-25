@@ -88,7 +88,6 @@ int main(int argc, char *argv[]){
 	if (addr == NULL){
 		fprintf(stderr, "Impossible de se connecter\n");
 		freeaddrinfo(res);
-		freeaddrinfo(addr);
 		exit(EXIT_FAILURE);
 	}
 	
@@ -137,7 +136,6 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Il y a eu une erreur lors du select: %s\n", strerror(errno));
 			free_window(win);
 			freeaddrinfo(res);
-			freeaddrinfo(addr);
 			close(sock);
 			exit(EXIT_FAILURE);
 		}	
@@ -148,7 +146,6 @@ int main(int argc, char *argv[]){
 				fprintf(stderr, "il y a une erreur lors de l'envoie d'un message après timer select:\n%s\n",strerror(errno));
 				free_window(win);
 				freeaddrinfo(res);
-				freeaddrinfo(addr);
 				close(sock);
 				exit(EXIT_FAILURE);
 			}
@@ -159,10 +156,9 @@ int main(int argc, char *argv[]){
 			struct msgUDP *msg = (struct msgUDP *) malloc(sizeof(struct msgUDP));
 			int size_recv =  recvfrom(sock, (void *) msg, sizeof(struct msgUDP),0,  addr->ai_addr, &(addr->ai_addrlen));
 			if(size_recv != sizeof(struct msgUDP)){
-				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n%lu!=%d",strerror(errno),sizeof(struct msgUDP), size_recv);
+				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n%lu!=%d\nEn cas d'un connection refused, peut être qu'il n'y a pas de receiver connecté\n",strerror(errno),sizeof(struct msgUDP), size_recv);
 				free_window(win);
 				freeaddrinfo(res);
-				freeaddrinfo(addr);
 				close(sock);				
 				exit(EXIT_FAILURE);
 			}
@@ -186,7 +182,6 @@ int main(int argc, char *argv[]){
 
 
 	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
-	freeaddrinfo(addr);
 	//FERMETURE DES DESCRIPTEURS :
 	if(filenamegive == 1)
 		close(fd); //fermeture du descripteur du fichier

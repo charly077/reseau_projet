@@ -117,7 +117,7 @@ void free_window(struct window *win){
 		free((*(win->buffer))->msg); //suppression de la mémoire allouée pour la struct msgUDP
 		free(*(win)->buffer); // suppression de la mémoire allouée pour le paquet
 	}
-	free(win->buffer);//suppression de la mémoire allouée pour le buffer
+	//free(win->buffer);//suppression de la mémoire allouée pour le buffer
 	free(win); // suppression de la mémoire allouée pour la windows
 	printf("la mémoire alloué à la fenêtre et à ses sous-éléments à été libérée\n");
 }
