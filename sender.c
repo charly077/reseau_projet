@@ -17,7 +17,6 @@
 
 
 #define TIMER 100 // définition du timer pour réenvoyer le premier parquet de la window 
-//TEST POU RLE GIT ....
 
 int main(int argc, char *argv[]){
 	//VARIABLES ET GESTION DES PARAMETRE:
