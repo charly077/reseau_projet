@@ -61,7 +61,7 @@ void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send
 	if(size <512) *fini_send = 1;
 	printf("fini_send = %d\n",*fini_send);
 	//calcul du crc sur tout le contenu sauf lui mm
-	new_paquet->crc32 = crc32( 0, (void *)new_paquet, sizeof(msgUDP) - sizeof(uLong));
+	new_paquet->crc32 = crc32( 0L, (void *)new_paquet, sizeof(msgUDP) - sizeof(uLong));
 	//ajout des erreur sber
 	if(random()%1000 < sber){
 		new_paquet->payload[0] ^= 0xff; // inverse le premier bit

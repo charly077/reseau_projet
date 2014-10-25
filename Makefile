@@ -2,10 +2,10 @@
 #  Makefile pour le projet de réseau 2014
 #
 
-GCC = clang
+GCC = gcc
 AR = ar
 ARFLAGS = -cvq
-CFLAGS =  -g -c
+CFLAGS =  -g -c 
 LDFLAGS = --static -g
 
 sender: sender.c struct.h paquet_creator.o selective_repeat.o
@@ -13,10 +13,10 @@ sender: sender.c struct.h paquet_creator.o selective_repeat.o
 	
 
 paquet_creator.o : paquet_creator.h struct.h paquet_creator.c
-	$(GCC) $(CFLAGS)  paquet_creator.c
+	$(GCC) $(CFLAGS)  paquet_creator.c -lz
 
 selective_repeat.o : selective_repeat.h selective_repeat.c
-	$(GCC) $(CFLAGS) selective_repeat.c 
+	$(GCC) $(CFLAGS) selective_repeat.c -lz
 
 clean:
 	rm ./sender *.o
