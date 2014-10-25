@@ -91,12 +91,12 @@ int main(int argc, char *argv[]){
 		exit(EXIT_FAILURE);
 	}
 
-	//bind pour recevoir des info:
+/*	//bind pour recevoir des info:
 	if( bind(sock, addr->ai_addr, addr->ai_addrlen) == -1){
 		fprintf(stderr,"bind à raté\n%s\n",strerror(errno)); 
 		exit(EXIT_FAILURE);
 	}
-	
+*/	
 	
 /*
 	//test d'envoi d'un paquet : 
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]){
 		else if(select_result>0 && FD_ISSET(sock,&read_ack)) {
 			//ça veut dire que j'ai recu un ack
 			struct msgUDP *msg = (struct msgUDP *) malloc(sizeof(struct msgUDP));
-			int size_recv =  recvfrom(sock, (void *) msg, sizeof(struct msgUDP),0,NULL,NULL);// test ...  addr->ai_addr, &(addr->ai_addrlen));
+			int size_recv =  recvfrom(sock, (void *) msg, sizeof(struct msgUDP),0,  addr->ai_addr, &(addr->ai_addrlen));
 			if(size_recv != sizeof(struct msgUDP)){
 				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n%lu!=%d",strerror(errno),sizeof(struct msgUDP), size_recv);
 				//exit(EXIT_FAILURE);
