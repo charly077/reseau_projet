@@ -6,6 +6,8 @@
 #include <zlib.h>       // Pour le CRC
 #include <stdint.h>     // Pour les uint8_t, ...
 #include <netdb.h> 	   // à importer pour le getaddrinfo (surtout les structures avant)
+#include <sys/time.h>	// Pour les timers de select (qu'on n'a pas ici mais bon...)
+#include <unistd.h>	// Pour select()
 
 #include "struct.h"
 
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    int sockett;
+    int sockett;   						// ATTENTION -> socket = descripteur de fichier (comme stdout,FILE, ...) 
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         sockett = socket(rp->ai_family, rp->ai_socktype,rp->ai_protocol);
         if (sockett == -1)
@@ -107,7 +109,7 @@ int main(int argc, char *argv[])
     char c[1];								// Pour trouver les endroits ou il y a rien sur le buffer_tot
     memset(c, 0, sizeof(c));
 
-    // Ouvrir le fichier
+	// Ouvrir le fichier
 	FILE *fichier = fopen(filename, "w");
 	if (fichier == NULL)
 	{
@@ -126,98 +128,151 @@ int main(int argc, char *argv[])
 	ack_struct->crc32 = 0;
 
 	int j = 0; 
-	int h = 0;
-    while(longueur_recu == PAYLOAD_SIZE)
+	int permission_lecture = 0;
+	fd_set donne_dispo;
+	int permission_envoi = 0;
+	fd_set dispo_envoi;
+	
+	//-------------------------------------
+	// BOUCLE PRINCIPALE !!!
+	//------------------------------------
+    while(longueur_recu >= PAYLOAD_SIZE) 			// Petit erreur -> 520 ou 512 ???
     {
     	printf("On est dans la boucle !\n");
-    	h++;
-    	// On reçoit un packet
-        longueur_recu = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, rp->ai_addr, &(rp->ai_addrlen)); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
-        if (longueur_recu == -1) {
-            printf("Problème, le message reçu n'est pas valide...\n" );            
-        }
-
-        // On a reçu un buffer qui est en fait un packet. A la base, c'était une structure donc on la caste dans un structure.
-        packet_struct = (struct msgUDP *) packet_buf;
-
-        // Checker Type et CRC
-        uLong crc = crc32(0L, Z_NULL, 0);
-   		crc = crc32(crc, packet_buf, strlen(packet_buf) - sizeof(uLong));
-
-		if (crc != packet_struct->crc32)
-		{
-			
-			// Le CRC n'est pas bon, le paquet doit être discardé
-			printf("Les CRC ne correspondent pas, le packet va être discardé\n");
+	
+	FD_ZERO(&donne_dispo);	  				// Remise à 0 de la struct donne dispo
+	FD_SET(sockett, &donne_dispo);				// Pas compris ???
+	
+    	// On reçoit un packet 
+	if((permission_lecture = select(sockett+1, &donne_dispo, NULL, NULL, NULL)) < 0)
+	{
+		printf("Erreur lors du select()");
+		return EXIT_FAILURE;
+	}
+	
+	if(permission_lecture == 0)
+	{
+		// timer a expiré -> on n'aura pas ce cas là puisqu'il n'y a pas de timer
+		printf("Le timer a expiré de lecture a expiré...");
+	}
+	if(FD_ISSET(sockett, &donne_dispo))
+   	{
+      		/* des données sont disponibles sur le socket */
+      		/* traitement des données */
+		printf("On va écouter\n");
+		longueur_recu = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, rp->ai_addr, &(rp->ai_addrlen)); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
+		if (longueur_recu == -1) {
+		    printf("Problème, le message reçu n'est pas valide...\n" );            
 		}
+
+		// On a reçu un buffer qui est en fait un packet. A la base, c'était une structure donc on la caste dans un structure.
+		packet_struct = (struct msgUDP *) packet_buf;
+
+		// Checker Type et CRC
+		//uLong crc = crc32(0L, Z_NULL, 0);   		
+		uLong crc = crc32(0, (void *) packet_struct, sizeof(msgUDP) - sizeof(uLong)); // J'ai modifié ici (de gcc à clang)
+
+		if (packet_struct->type != PTYPE_DATA)//(crc != packet_struct->crc32 || packet_struct->type != PTYPE_DATA)
+		{	
+			// Le CRC n'est pas bon ou le type ne vaut pas 1, le paquet doit être discardé
+			printf("Les CRC %lu et %lu ne correspondent pas, le packet va être discardé\n", crc, packet_struct->crc32);
+		}
+		//----------------------------------------------
+		// Les CRC correspondent et le type = 1, le  packet est donc potentiellement correct (faut encore vérifier le numéro de séquence
 		else 
 		{
 			// Si on est ici, c'est que les CRC correspondent
-			
+		
 			// Copie de tous les éléments requis depuis la structure
-	        strcpy(payload_buf, packet_struct->payload);
-	        j = packet_struct->seq_num;
-	        longueur_recu = packet_struct->length;
-
+			strcpy(payload_buf, packet_struct->payload);
+			j = packet_struct->seq_num;
+			longueur_recu = packet_struct->length;
 			// Vérification de si c'est la fin des packets
-	        if (longueur_recu < PAYLOAD_SIZE)
-	        {
-	        	printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
-	        	break;
-	        }
-
-	        // Gestion du stockage de l'élément en fonction de là ou est la fenêtre !!!
-	        if(j >= minimum && j <= maximum && packet_struct->type == PTYPE_DATA)
-	        {
-	        	// Copie dans le buffer
-	        	strcpy(buffer_tot[j], payload_buf);
-	        }
-	        else if (maximum < minimum && j >= minimum && packet_struct->type == PTYPE_DATA)
-	        {
-	        	// Ok aussi, ça veut dire que max = 13, min = 252 et j = 254
-	        	strcpy(buffer_tot[j], payload_buf);
-	        }
-	        else if (maximum < minimum && j <= maximum && packet_struct->type == PTYPE_DATA)
-	        {
-	        	// Ok aussi, ça veut dire que max = 13, min = 252 et j = 8
-	        	strcpy(buffer_tot[j], payload_buf);
-	        }
-	        else
-	        {
-	        	printf("packet discardé car numéro hors de la fenêtre\n");
-	        }
+			if (longueur_recu < PAYLOAD_SIZE)					// Il faut re-gérer ce cas là peut-être -> ???
+			{
+				printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
+				break;
+			}
+			// Gestion du stockage de l'élément en fonction de là ou est la fenêtre !!!
+			if(j >= minimum && j <= maximum)
+			{
+				// Copie dans le buffer
+				strcpy(buffer_tot[j], payload_buf);
+			}
+			else if (maximum < minimum && j >= minimum)
+			{
+				// Ok aussi, ça veut dire que max = 13, min = 252 et j = 254
+				strcpy(buffer_tot[j], payload_buf);
+			}
+			else if (maximum < minimum && j <= maximum)
+			{
+				// Ok aussi, ça veut dire que max = 13, min = 252 et j = 8
+				strcpy(buffer_tot[j], payload_buf);
+			}
+			else
+			{
+				printf("packet discardé car numéro hors de la fenêtre\n");
+			}
 			
 			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
 				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
-			printf("Contenu : %s\n", payload_buf);
-		}
-
+			//printf("Contenu : %s\n", payload_buf);
+		} // On sort de la partie : si les CRC correspondent bien, parce que même si les CRC correspondent pas, il faut envoyer un ACK
+		
+		// -----------------------------------------
 		// Actualisation des variables							
 		while(strncmp(buffer_tot[attendu] , c,  1) != 0) 					// Temps que le attendu est rempli
 		{
 			fprintf(fichier, "%s\n", buffer_tot[attendu]); 					// Copie dans le fichier
 			memset(buffer_tot[attendu], 0, sizeof(buffer_tot[attendu])); 	// On remet à 0
-
 			lastack = attendu;												// lastack = attendu
 			attendu = (attendu + 1) % 256;									// attendu++
 			minimum = attendu;												// minimum = attendu
 			maximum = (maximum + 1) % 256;									// maximum++
 		}
+	//} // Fin du select -> si les données sont dispo en lecture -> A remettre
+	
+	//FD_ZERO(&dispo_envoi);	 -> a remettre 				// Remise à 0 de la struct donne dispo
+	//FD_SET(sockett, &dispo_envoi); -> a remettre		
 
-		// Envoyer un ACK
-		ack_struct->seq_num = lastack;
+	// ----------------------------------------
+	// Envoyer un ACK
+	// Si les données sont dispo en envoi (pour envoyer l'ACK)
+		
+	// PARTIE SELECT, il me la faut ?  -> a remettre
 
+	/*
+	printf("On attend d'envoyer...\n");
+	if ((permission_envoi = select(sockett, NULL, &dispo_envoi, NULL, NULL)) < 0) //-> il me faut un autre socket nn ? 
+	{
+		printf("Erreur lors du select pour l'envoi\n");
+		return EXIT_FAILURE;
+	}
+	if (permission_envoi == 0)
+	{
+		// Le timer a été déclenché, mais il y en pas
+		printf("Le timer pour l'envoi à été écoulé, mais il en a pas donc on ne devrait jamais voir ce message donc j'écris pour le plaisir #happy\n");
+	}
+	if (FD_ISSET(sockett, &dispo_envoi))
+	{	
+	*/
+		printf("Envoi du socket dispo");
+		ack_struct->seq_num = lastack+2;
 		uLong crcAck = crc32(0L, Z_NULL, 0);
-		crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));
+		//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
+		crcAck = crc32(0, (void *) ack_struct, sizeof(ack_struct) - sizeof(uLong));
 		ack_struct->crc32 = crcAck;
-
+		
 		if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
 		{
-			printf("Accusé envoyé avec numéro : %d\n", lastack);
+			printf("Accusé envoyé avec numéro : %d\n", lastack+2);
 		}
-
-    }
+	} //-> a enlever
+	//} -> a remettre
+	
+    }	// fin du while
 
 
     fclose(fichier);
-}
+    printf("Fin du programme");
+} // fin du main
