@@ -61,7 +61,7 @@ void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send
 	if(size <512) *fini_send = 1;
 	printf("fini_send = %d\n",*fini_send);
 	//calcul du crc sur tout le contenu sauf lui mm
-	new_paquet->crc32 = crc32( 0L, (void *)new_paquet, sizeof(msgUDP) - sizeof(uLong));
+	new_paquet->crc32 = crc32( 0L, (void *)new_paquet, sizeof(msgUDP) - sizeof(new_paquet->crc32));
 	printf("le paquet avec le numéro de séquence %d a un crc de %d\n",seq_num,new_paquet->crc32);
 	//ajout des erreur sber
 	if(random()%1000 < sber){
