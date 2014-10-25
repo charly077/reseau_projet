@@ -38,14 +38,10 @@ void ack_recu(int n_seq, struct window *win){
 		struct paquet *paq_tofree = *(win->buffer);
 		free(paq_tofree);
 		(*(win->buffer))->ack=0;//pour s'assurer de ne pas boucler car l'element n'est pas suprimer de la mémoire si il n'y a rien à copier dessus
-		int j;
-		for(j=0; j< ((win->nb_elem)-(win->nb_elem_vide)) && j< ((win->nb_elem)-1);j++){
-			*(win->buffer + j) = *(win->buffer+j+1);
-		}
-		//struct paquet ** buff2 = (struct paquet **) malloc((win->nb_elem -1 )*sizeof(struct paquet *));
-		//strncpy((void *)buff2, (void *)((win->buffer)+1),((win->nb_elem)-1) * sizeof(struct paquet *));
-		//strncpy((void *)(win->buffer),(void *)(buff2), ((win->nb_elem)-1) * sizeof(struct paquet *));
-		//free(buff2);
+		struct paquet ** buff2 = (struct paquet **) malloc((win->nb_elem -1 )*sizeof(struct paquet *));
+		strncpy((void *)buff2, (void *)((win->buffer)+1),((win->nb_elem)-1) * sizeof(struct paquet *));
+		strncpy((void *)(win->buffer),(void *)(buff2), ((win->nb_elem)-1) * sizeof(struct paquet *));
+		free(buff2);
 		printf("la fenetre à été déplacée\n");
 		
 	}

@@ -18,6 +18,11 @@
 
 #define TIMER 3000 // définition du timer pour réenvoyer le premier parquet de la window 
 
+int err(char *err, struct window *win){
+	fprintf("Une erreur est survenue lors de l'exécution du sender :\n%s\n%s\n",err, strerror(errno));
+	free_window(win);
+	exit(EXIT_FAILURE)
+}
 
 int main(int argc, char *argv[]){
 	//VARIABLES ET GESTION DES PARAMETRE:
@@ -85,13 +90,18 @@ int main(int argc, char *argv[]){
 
 		close(sock); // si on est pas sorti de la boucle il faut fermer le socket
 	}
+
 	if (addr == NULL){
 		fprintf(stderr, "Impossible de se connecter\n");
-		freeaddrinfo(res);
-		freeaddrinfo(addr);
 		exit(EXIT_FAILURE);
 	}
-	
+
+/*	//bind pour recevoir des info:
+	if( bind(sock, addr->ai_addr, addr->ai_addrlen) == -1){
+		fprintf(stderr,"bind à raté\n%s\n",strerror(errno)); 
+		exit(EXIT_FAILURE);
+	}
+*/	
 	
 /*
 	//test d'envoi d'un paquet : 
@@ -105,7 +115,7 @@ int main(int argc, char *argv[]){
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 	if(filenamegive == 1) fd = file_desc(filename);
 	else {
-		fd = STDIN_FILENO;
+	fd = STDIN_FILENO;
 	}
 
 	//création de la window:
@@ -121,7 +131,8 @@ int main(int argc, char *argv[]){
 		timeout.tv_usec = TIMER * 1000; // recréation du timer
 		//tant qu'il y a de la place dans la window, on envoie ...
 		if(fini_send == 0 && win->nb_elem == window_size){ 
-			send_window(win,fd, &next_seq_num, &fini_send, sock,addr,sber, splr); // à implémenter ; envoyer un élément si il y en a encore à envoyer		
+			send_window(win,fd, &next_seq_num, &fini_send, sock,addr,sber, splr); // à implémenter ; envoyer un élément si il y en a encore à envoyer
+			
 		}
 		else if (fini_send == 0 && (win->nb_elem)!=window_size){
 			if(window_size<1) window_resize(win,1);
@@ -135,22 +146,12 @@ int main(int argc, char *argv[]){
 	
 		if(select_result<-1){
 			fprintf(stderr, "Il y a eu une erreur lors du select: %s\n", strerror(errno));
-			free_window(win);
-			freeaddrinfo(res);
-			freeaddrinfo(addr);
-			close(sock);
-			exit(EXIT_FAILURE);
 		}	
 		else if (select_result == 0){
 			//ça signifie que le timer a expiré, il faut donc réenvoyer le premier élément de la liste
 			int size_sendto = sendto(sock, (*(win->buffer))->msg,sizeof(struct msgUDP),0,addr->ai_addr,addr->ai_addrlen);
 			if(size_sendto != sizeof(struct msgUDP)){
 				fprintf(stderr, "il y a une erreur lors de l'envoie d'un message après timer select:\n%s\n",strerror(errno));
-				free_window(win);
-				freeaddrinfo(res);
-				freeaddrinfo(addr);
-				close(sock);
-				exit(EXIT_FAILURE);
 			}
 			printf("Suite à l'expiration du timer, le premier paquet de la fenetre à été réenvoyé\n"); 
 		}
@@ -160,11 +161,7 @@ int main(int argc, char *argv[]){
 			int size_recv =  recvfrom(sock, (void *) msg, sizeof(struct msgUDP),0,  addr->ai_addr, &(addr->ai_addrlen));
 			if(size_recv != sizeof(struct msgUDP)){
 				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n%lu!=%d",strerror(errno),sizeof(struct msgUDP), size_recv);
-				free_window(win);
-				freeaddrinfo(res);
-				freeaddrinfo(addr);
-				close(sock);				
-				exit(EXIT_FAILURE);
+				//exit(EXIT_FAILURE);
 			}
 			else if(msg->type == PTYPE_ACK){ // uniquement si c'est bien un ack 
 				if((int) (msg->window)>32) window_size = 31;
@@ -184,14 +181,12 @@ int main(int argc, char *argv[]){
 		}		
 	} // fin boucle pour d'envoi
 
+	printf("l'envoie du fichier c'est terminé\n");
 
 	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
-	freeaddrinfo(addr);
 	//FERMETURE DES DESCRIPTEURS :
 	if(filenamegive == 1)
 		close(fd); //fermeture du descripteur du fichier
 	close(sock);
-	free_window(win);
-	printf("l'envoie du fichier c'est correctement terminé\n");
 
 }
