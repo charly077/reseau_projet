@@ -68,7 +68,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
-			(*next_seq_num) = (*next_seq_num) % 255;
+			(*next_seq_num) = (*next_seq_num)+1 % 255;
 		 }
 	}
 }
