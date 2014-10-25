@@ -17,7 +17,7 @@ typedef struct msgUDP{
 	uint8_t seq_num;
 	uint16_t length;
 	char payload[512];//je ne sais pas comment implémenter le payload de 512bytes dans la structure
-	uLong crc32; 
+	int crc32; 
 }__attribute__((packed)) msgUDP;
 
 

@@ -63,6 +63,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 				if(nb != sizeof(struct msgUDP)){
 					fprintf(stderr, "il y a eu une erreur lors de l'envoie d'un messageUDP \n%s\ntaille msgUDP = %lu, taille envoyé = %d\n", strerror(errno), sizeof(struct msgUDP), nb);
 				}
+				printf("\nle crc du paquet avec le n° %d est de %lu, de plus le paquet est de type %d et de taille %d\n",msg->seq_num, msg->crc32,msg->type,msg->length);
 			}
 
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);

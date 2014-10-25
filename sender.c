@@ -16,7 +16,7 @@
 #include "paquet_creator.h"
 
 
-#define TIMER 2 // définition du timer pour réenvoyer le premier parquet de la window 
+#define TIMER 100 // définition du timer pour réenvoyer le premier parquet de la window 
 
 
 int main(int argc, char *argv[]){
@@ -90,7 +90,12 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Impossible de se connecter\n");
 		exit(EXIT_FAILURE);
 	}
-	
+
+	//bind pour recevoir des info:
+	if( bind(sock, addr->ai_addr, addr->ai_addrlen) == -1){
+		fprintf(stderr,"bind à raté\n%s\n",strerror(errno)); 
+		exit(EXIT_FAILURE);
+	}
 	
 	
 /*
@@ -113,7 +118,6 @@ int main(int argc, char *argv[]){
 
 	//création du timeout pour select:
 	timeout.tv_sec = 0;
-	printf("attention, remmetre le timer correct");
 	timeout.tv_usec = TIMER * 1000; // timer défini en define en ms
 
 
@@ -146,19 +150,20 @@ int main(int argc, char *argv[]){
 		}
 		else if(select_result>0 && FD_ISSET(sock,&read_ack)) {
 			//ça veut dire que j'ai recu un ack
-			struct msgUDP msg;
-			int size_recv =  recvfrom(sock, (void *) &msg, sizeof(struct msgUDP),0, addr->ai_addr, &(addr->ai_addrlen));
+			struct msgUDP *msg = (struct msgUDP *) malloc(sizeof(struct msgUDP));
+			int size_recv =  recvfrom(sock, (void *) msg, sizeof(struct msgUDP),0,NULL,NULL);// test ...  addr->ai_addr, &(addr->ai_addrlen));
 			if(size_recv != sizeof(struct msgUDP)){
 				fprintf(stderr, "erreur lors de la réception d'un ack\n%s\n%lu!=%d",strerror(errno),sizeof(struct msgUDP), size_recv);
 				//exit(EXIT_FAILURE);
 			}
-			else if(msg.type == PTYPE_ACK){ // uniquement si c'est bien un ack 
-				window_size = (int)msg.window; // attention vérif conversion
-				ack_recu(msg.seq_num - 1, win);// il faut faire moins 1
-				printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg.seq_num);
+			else if(msg->type == PTYPE_ACK){ // uniquement si c'est bien un ack 
+				window_size = (int)(msg->window); // attention vérif conversion
+				ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
+				printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg->seq_num);
 				if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
 					fini =1; // fin de l'envoie
 			}
+			free(msg);
 
 		}		
 	} // fin boucle pour d'envoi
