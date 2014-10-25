@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 	if (FD_ISSET(sockett, &dispo_envoi))
 	{	
 	*/
-		printf("Envoi du socket dispo");
+		printf("Envoi du socket dispo\n");
 		ack_struct->seq_num = lastack+2;
 		uLong crcAck = crc32(0L, Z_NULL, 0);
 		//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
@@ -274,5 +274,5 @@ int main(int argc, char *argv[])
 
 
     fclose(fichier);
-    printf("Fin du programme");
+    printf("Fin du programme\n");
 } // fin du main
