@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 	memset(ack_buf, 0, PACKET_SIZE); // Remet à 0 la zone d'accusé
 	struct msgUDP *ack_struct = (struct msgUDP *) ack_buf;
 	ack_struct->type = PTYPE_ACK;
-	ack_struct->window = 1;
+	ack_struct->window = 31;
 	ack_struct->seq_num = 0;
 	ack_struct->length = PAYLOAD_SIZE;
 	// Pas besoin pour le payload puisqu'il est déjà à 0
