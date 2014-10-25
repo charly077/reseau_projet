@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     struct addrinfo hints;
     struct addrinfo *result, *rp;
 
-    char *filename;
+    	char filename[20];
 	int port;
 	char *port_to_string;
 	char *hostname;
@@ -36,7 +36,8 @@ int main(int argc, char *argv[])
     if (argc == 5)
 	{
 		// copier le filename
-		filename = argv[2];
+		//filename = argv[2];
+		strcpy(filename, argv[2]);
 		hostname = argv[3];
 		port = atoi(argv[4]);
 		port_to_string = argv[4];
@@ -44,8 +45,8 @@ int main(int argc, char *argv[])
 	else 
 	{
 		// prendre le filename sur le stdin
-		printf("Veuillez entrez le nom de l'hote ou l'adresse IPv6\n");
-		scanf("%s",filename);			// Comment on fait pour l'extension ???
+		printf("Veuillez entrez le nom du fichier (max 19 cara.)\n");
+		scanf("%19s",filename);					// Comment on fait pour l'extension ???
 		hostname = argv[1];
 		port = atoi(argv[2]);
 		port_to_string = argv[2];
@@ -101,10 +102,10 @@ int main(int argc, char *argv[])
 
     char buffer_tot[255][PACKET_SIZE];
     memset(buffer_tot, 0, sizeof(buffer_tot)); // Pour pouvoir le comparer au char c afin de déterminer là ou il y a des données et calculer le lastack
-    int maximum = 15;						// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
-    int lastack	= -1;						// Dernier qu'on a reçu
-    int attendu = 0;						// C'est celui attendu (= lastack + 1)
-    int minimum = attendu;					// Minimum de la fenêtre d'acceptation des paquets
+    uint8_t maximum = 15;						// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
+    uint8_t lastack = -1;						// Dernier qu'on a reçu
+    uint8_t attendu = 0;						// C'est celui attendu (= lastack + 1)
+    uint8_t minimum = attendu;						// Minimum de la fenêtre d'acceptation des paquets
 
     char c[1];								// Pour trouver les endroits ou il y a rien sur le buffer_tot
     memset(c, 0, sizeof(c));
@@ -127,7 +128,8 @@ int main(int argc, char *argv[])
 	// Pas besoin pour le payload puisqu'il est déjà à 0
 	ack_struct->crc32 = 0;
 
-	int j = 0; 
+	//int j = 0; 
+	uint8_t j = 0;
 	int permission_lecture = 0;
 	fd_set donne_dispo;
 	int permission_envoi = 0;
@@ -170,12 +172,13 @@ int main(int argc, char *argv[])
 
 		// Checker Type et CRC
 		//uLong crc = crc32(0L, Z_NULL, 0);   		
-		uLong crc = crc32(0, (void *) packet_struct, sizeof(msgUDP) - sizeof(uLong)); // J'ai modifié ici (de gcc à clang)
+		uLong crc = crc32(0, (void *) packet_struct, sizeof(msgUDP)-sizeof(int)); //- sizeof(uLong)); // J'ai modifié ici (de gcc à clang)
 
-		if (packet_struct->type != PTYPE_DATA)//(crc != packet_struct->crc32 || packet_struct->type != PTYPE_DATA)
+		if (crc != packet_struct->crc32 || packet_struct->type != PTYPE_DATA)
 		{	
 			// Le CRC n'est pas bon ou le type ne vaut pas 1, le paquet doit être discardé
-			printf("Les CRC %lu et %lu ne correspondent pas, le packet va être discardé\n", crc, packet_struct->crc32);
+			printf("Les CRC %lu et %d ne correspondent pas, le packet va être discardé\n", crc, packet_struct->crc32);
+			longueur_recu = 0;
 		}
 		//----------------------------------------------
 		// Les CRC correspondent et le type = 1, le  packet est donc potentiellement correct (faut encore vérifier le numéro de séquence
@@ -185,11 +188,12 @@ int main(int argc, char *argv[])
 			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
 				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
 			// Copie de tous les éléments requis depuis la structure
+			j = packet_struct->seq_num;			
 			strcpy(payload_buf, packet_struct->payload);
-			j = packet_struct->seq_num;
 			longueur_recu = packet_struct->length;
 			
 			// Gestion du stockage de l'élément en fonction de là ou est la fenêtre !!!
+			printf("min : %d < %d < %d : max\n", minimum, j,  maximum);
 			if(j >= minimum && j <= maximum)
 			{
 				// Copie dans le buffer
@@ -224,11 +228,14 @@ int main(int argc, char *argv[])
 		while(strncmp(buffer_tot[attendu] , c,  1) != 0) 					// Temps que le attendu est rempli
 		{
 			fprintf(fichier, "%s\n", buffer_tot[attendu]); 					// Copie dans le fichier
-			memset(buffer_tot[attendu], 0, sizeof(buffer_tot[attendu])); 	// On remet à 0
+			printf("attendu dans la boucle : %d\n", attendu);
+			//printf("%s \n", buffer_tot[attendu]);
+			memset(buffer_tot[attendu], 0, sizeof(buffer_tot[attendu])); 			// On remet à 0
 			lastack = attendu;												// lastack = attendu
 			attendu = (attendu + 1) % 256;									// attendu++
 			minimum = attendu;												// minimum = attendu
 			maximum = (maximum + 1) % 256;									// maximum++
+			
 		}
 	//} // Fin du select -> si les données sont dispo en lecture -> A remettre
 	
@@ -256,16 +263,19 @@ int main(int argc, char *argv[])
 	if (FD_ISSET(sockett, &dispo_envoi))
 	{	
 	*/
-		printf("Envoi du socket dispo\n");
-		ack_struct->seq_num = lastack+2;
-		uLong crcAck = crc32(0L, Z_NULL, 0);
-		//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
-		crcAck = crc32(0, (void *) ack_struct, sizeof(ack_struct) - sizeof(uLong));
-		ack_struct->crc32 = crcAck;
+		if (longueur_recu == PAYLOAD_SIZE) 				// Permet de vérifier si le packet qu'on a reçu était ok (niveau CRC)		
+		{		
+			printf("Envoi du socket dispo\n");
+			ack_struct->seq_num = lastack+1;
+			uLong crcAck = crc32(0L, Z_NULL, 0);
+			//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
+			crcAck = crc32(0, (void *) ack_struct, sizeof(ack_struct) -sizeof(int)); //- sizeof(uLong));
+			ack_struct->crc32 = crcAck;
 		
-		if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
-		{
-			printf("Accusé envoyé avec numéro : %d\n", lastack+2);
+			if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
+			{
+				printf("Accusé envoyé avec numéro : %d\n", lastack+1);
+			}
 		}
 	} //-> a enlever
 	//} -> a remettre
