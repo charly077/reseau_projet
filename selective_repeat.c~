@@ -51,15 +51,11 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 		int i = 0;
 		 while(win->nb_elem_vide >0 && *fini_send !=1){
 		 	struct msgUDP *msg;
-			create_paquet(fd,*next_seq_num ,&msg,fini_send);
+			create_paquet(fd,*next_seq_num ,&msg,fini_send,sber);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));
 			paq->ack = 0;
 			paq->msg = msg;
 			*((win->buffer)+(win->nb_elem)-(win->nb_elem_vide)) = paq;
-			int err_bit = (random()%1000 < sber);
-			if(err_bit){
-				(paq->msg)->payload[0] ^=0xff; // si on doit créer une erreur on inverse le premier bit
-			}
 			// envoie du paquet
 			if(random()%100 > splr)
 			{
@@ -69,9 +65,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 				}
 				printf("\nle crc du paquet avec le n° %d est de %d, de plus le paquet est de type %d et de taille %d\n",msg->seq_num, msg->crc32,msg->type,msg->length);
 			}
-			if(err_bit){
-				(paq->msg)->payload[0] ^=0xff; // si une erreur a été crée on reinverse le premier bit
-			}
+
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
 			(*next_seq_num) = (*next_seq_num)+1 % 255;

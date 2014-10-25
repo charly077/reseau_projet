@@ -173,6 +173,7 @@ int main(int argc, char *argv[]){
 		}		
 	} // fin boucle pour d'envoi
 
+	printf("l'envoie du fichier c'est terminé\n");
 
 	freeaddrinfo(res); // libération de addrinfo car  on en a plus besoin après
 	//FERMETURE DES DESCRIPTEURS :
