@@ -34,8 +34,8 @@ void ack_recu(int n_seq, struct window *win){
 		win->nb_elem_vide ++;
 		free((*(win->buffer))->msg); // libere l'espace du msgUDP
 		struct paquet *paq_tofree = *(win->buffer);
-		free(paq_tofree->msg);
 		free(paq_tofree);
+		(*(win->buffer))->ack=0;//pour s'assurer de ne pas boucler car l'element n'est pas suprimer de la mémoire si il n'y a rien à copier dessus
 		strncpy((void *)(win->buffer),(void *)((win->buffer)+1), ((win->nb_elem)-1) * sizeof(struct paquet *));
 		printf("la fenetre à été déplacée\n");
 		
@@ -68,7 +68,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
-			(*next_seq_num) ++;
+			(*next_seq_num) = (*next_seq_num) % 255;
 		 }
 	}
 }

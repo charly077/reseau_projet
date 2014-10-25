@@ -29,13 +29,13 @@ int tab_512b(int desc, char **elem){
 	char *buf = (char *) malloc(TAILLE_PAYLOAD); // allouer une place de 512 bytes pour le contenu de l'élément
 	memset(buf, 0, TAILLE_PAYLOAD); // on est sur que si le fichier est plus petit, ou terminé, on a un padding de 0
 
-	int size = read(desc, buf, TAILLE_PAYLOAD);
+	int size = read(desc, buf, TAILLE_PAYLOAD-1);//pour laisser la place au \0
 	if(size == -1){
 		fprintf(stderr, "Il y a eu une erreur lors de la lecture du fichier :\n%s\n", strerror(errno)); 
 		exit(EXIT_FAILURE);
 	}
 	*elem = buf;
-	return size;
+	return size+1;//attention bizarre
 }
 
 int file_desc(char *filename){

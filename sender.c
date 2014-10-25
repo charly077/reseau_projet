@@ -16,7 +16,7 @@
 #include "paquet_creator.h"
 
 
-#define TIMER 100 // définition du timer pour réenvoyer le premier parquet de la window 
+#define TIMER 3000 // définition du timer pour réenvoyer le premier parquet de la window 
 
 int main(int argc, char *argv[]){
 	//VARIABLES ET GESTION DES PARAMETRE:
@@ -156,7 +156,13 @@ int main(int argc, char *argv[]){
 				//exit(EXIT_FAILURE);
 			}
 			else if(msg->type == PTYPE_ACK){ // uniquement si c'est bien un ack 
-				window_size = (int)(msg->window); // attention vérif conversion
+				if((int) (msg->window)>32) window_size = 31;
+				else if((int) (msg->window)<1){
+					window_size = 1;
+				}
+				else{
+					window_size = (int)(msg->window); // attention vérif conversion
+				}	
 				ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
 				printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg->seq_num);
 				if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
