@@ -182,41 +182,41 @@ int main(int argc, char *argv[])
 		else 
 		{
 			// Si on est ici, c'est que les CRC correspondent
-		
+			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
+				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
 			// Copie de tous les éléments requis depuis la structure
 			strcpy(payload_buf, packet_struct->payload);
 			j = packet_struct->seq_num;
 			longueur_recu = packet_struct->length;
-			// Vérification de si c'est la fin des packets
-			if (longueur_recu < PAYLOAD_SIZE)					// Il faut re-gérer ce cas là peut-être -> ???
-			{
-				printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
-				break;
-			}
+			
 			// Gestion du stockage de l'élément en fonction de là ou est la fenêtre !!!
 			if(j >= minimum && j <= maximum)
 			{
 				// Copie dans le buffer
-				strcpy(buffer_tot[j], payload_buf);
+				strncpy(buffer_tot[j], payload_buf, longueur_recu);
 			}
 			else if (maximum < minimum && j >= minimum)
 			{
 				// Ok aussi, ça veut dire que max = 13, min = 252 et j = 254
-				strcpy(buffer_tot[j], payload_buf);
+				strncpy(buffer_tot[j], payload_buf, longueur_recu);
 			}
 			else if (maximum < minimum && j <= maximum)
 			{
 				// Ok aussi, ça veut dire que max = 13, min = 252 et j = 8
-				strcpy(buffer_tot[j], payload_buf);
+				strncpy(buffer_tot[j], payload_buf, longueur_recu);
 			}
 			else
 			{
 				printf("packet discardé car numéro hors de la fenêtre\n");
 			}
 			
-			printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
-				packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
-			//printf("Contenu : %s\n", payload_buf);
+			// Vérification de si c'est la fin des packets
+			if (longueur_recu < PAYLOAD_SIZE)
+			{
+				printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
+				break;
+			}
+
 		} // On sort de la partie : si les CRC correspondent bien, parce que même si les CRC correspondent pas, il faut envoyer un ACK
 		
 		// -----------------------------------------
