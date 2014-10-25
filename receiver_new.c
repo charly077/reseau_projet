@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
     char buffer_tot[255][PACKET_SIZE];
     memset(buffer_tot, 0, sizeof(buffer_tot)); // Pour pouvoir le comparer au char c afin de déterminer là ou il y a des données et calculer le lastack
-    uint8_t maximum = 15;						// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
+    uint8_t maximum = 31;						// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
     uint8_t lastack = -1;						// Dernier qu'on a reçu
     uint8_t attendu = 0;						// C'est celui attendu (= lastack + 1)
     uint8_t minimum = attendu;						// Minimum de la fenêtre d'acceptation des paquets
@@ -137,8 +137,10 @@ int main(int argc, char *argv[])
 	
 	//-------------------------------------
 	// BOUCLE PRINCIPALE !!!
+	// Si on a pas reçu 12, mais qu'on a reçu 13,14 et qu'on vient de recevoir 15 qui est le dernier packet -> pas fermer le programme			// 		// Petit erreur -> 520 ou 512 ???
 	//------------------------------------
-    while(longueur_recu >= PAYLOAD_SIZE) 			// Petit erreur -> 520 ou 512 ???
+	
+    while(longueur_recu >= PAYLOAD_SIZE || j != minimum) 
     {
     	printf("On est dans la boucle !\n");
 	
@@ -223,7 +225,7 @@ int main(int argc, char *argv[])
 			}
 			*/
 		} // On sort de la partie : si les CRC correspondent bien, parce que même si les CRC correspondent pas, il faut envoyer un ACK
-		
+	
 		// -----------------------------------------
 		// Actualisation des variables							
 		while(strncmp(buffer_tot[attendu] , c,  1) != 0) 					// Temps que le attendu est rempli
@@ -238,33 +240,11 @@ int main(int argc, char *argv[])
 			maximum = (maximum + 1) % 256;									// maximum++
 			
 		}
-	//} // Fin du select -> si les données sont dispo en lecture -> A remettre
 	
-	//FD_ZERO(&dispo_envoi);	 -> a remettre 				// Remise à 0 de la struct donne dispo
-	//FD_SET(sockett, &dispo_envoi); -> a remettre		
-
 	// ----------------------------------------
 	// Envoyer un ACK
 	// Si les données sont dispo en envoi (pour envoyer l'ACK)
-		
-	// PARTIE SELECT, il me la faut ?  -> a remettre
 
-	/*
-	printf("On attend d'envoyer...\n");
-	if ((permission_envoi = select(sockett, NULL, &dispo_envoi, NULL, NULL)) < 0) //-> il me faut un autre socket nn ? 
-	{
-		printf("Erreur lors du select pour l'envoi\n");
-		return EXIT_FAILURE;
-	}
-	if (permission_envoi == 0)
-	{
-		// Le timer a été déclenché, mais il y en pas
-		printf("Le timer pour l'envoi à été écoulé, mais il en a pas donc on ne devrait jamais voir ce message donc j'écris pour le plaisir #happy\n");
-	}
-	if (FD_ISSET(sockett, &dispo_envoi))
-	{	
-	*/		
-			//printf("Envoi du socket dispo\n");
 			ack_struct->seq_num = lastack+1;
 			int crcAck = crc32(0L, Z_NULL, 0);
 			//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
@@ -274,10 +254,9 @@ int main(int argc, char *argv[])
 			if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
 			{
 				printf("Accusé envoyé avec numéro : %d\n", lastack+1);
-			}
-		
-	} //-> a enlever
-	//} -> a remettre
+			}		
+			
+	} 
 	
     }	// fin du while
     fclose(fichier);
