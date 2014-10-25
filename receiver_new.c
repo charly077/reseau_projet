@@ -172,13 +172,13 @@ int main(int argc, char *argv[])
 
 		// Checker Type et CRC
 		//uLong crc = crc32(0L, Z_NULL, 0);   		
-		uLong crc = crc32(0, (void *) packet_struct, sizeof(msgUDP)-sizeof(int)); //- sizeof(uLong)); // J'ai modifié ici (de gcc à clang)
+		int crc = (int) crc32(0, (void *) packet_struct, sizeof(msgUDP)-sizeof(int)); //- sizeof(uLong)); // J'ai modifié ici (de gcc à clang)
 
 		if (crc != packet_struct->crc32 || packet_struct->type != PTYPE_DATA)
 		{	
 			// Le CRC n'est pas bon ou le type ne vaut pas 1, le paquet doit être discardé
-			printf("Les CRC %lu et %d ne correspondent pas, le packet va être discardé\n", crc, packet_struct->crc32);
-			longueur_recu = 0;
+			printf("Les CRC %d et %d ne correspondent pas, le packet va être discardé\n", crc, packet_struct->crc32);
+			longueur_recu = -1; // Pour quand même continuer dans la boucle
 		}
 		//----------------------------------------------
 		// Les CRC correspondent et le type = 1, le  packet est donc potentiellement correct (faut encore vérifier le numéro de séquence
@@ -215,12 +215,13 @@ int main(int argc, char *argv[])
 			}
 			
 			// Vérification de si c'est la fin des packets
+			/*
 			if (longueur_recu < PAYLOAD_SIZE)
 			{
 				printf("C'est l'envoi qui marque la fin de la connexion car < 512\n");
 				break;
 			}
-
+			*/
 		} // On sort de la partie : si les CRC correspondent bien, parce que même si les CRC correspondent pas, il faut envoyer un ACK
 		
 		// -----------------------------------------
@@ -228,7 +229,7 @@ int main(int argc, char *argv[])
 		while(strncmp(buffer_tot[attendu] , c,  1) != 0) 					// Temps que le attendu est rempli
 		{
 			fprintf(fichier, "%s\n", buffer_tot[attendu]); 					// Copie dans le fichier
-			printf("attendu dans la boucle : %d\n", attendu);
+			//printf("attendu dans la boucle : %d\n", attendu);
 			//printf("%s \n", buffer_tot[attendu]);
 			memset(buffer_tot[attendu], 0, sizeof(buffer_tot[attendu])); 			// On remet à 0
 			lastack = attendu;												// lastack = attendu
@@ -263,19 +264,20 @@ int main(int argc, char *argv[])
 	if (FD_ISSET(sockett, &dispo_envoi))
 	{	
 	*/
-		if (longueur_recu == PAYLOAD_SIZE) 				// Permet de vérifier si le packet qu'on a reçu était ok (niveau CRC)		
+		if (longueur_recu >= PAYLOAD_SIZE || longueur_recu == -1) // Permet de vérifier si le packet qu'on a reçu est le dernier ou pas		
 		{		
-			printf("Envoi du socket dispo\n");
+			//printf("Envoi du socket dispo\n");
 			ack_struct->seq_num = lastack+1;
-			uLong crcAck = crc32(0L, Z_NULL, 0);
+			int crcAck = crc32(0L, Z_NULL, 0);
 			//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
-			crcAck = crc32(0, (void *) ack_struct, sizeof(ack_struct) -sizeof(int)); //- sizeof(uLong));
+			crcAck = (int) crc32(0, (void *) ack_struct, sizeof(ack_struct) -sizeof(int)); //- sizeof(uLong));
 			ack_struct->crc32 = crcAck;
 		
 			if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
 			{
 				printf("Accusé envoyé avec numéro : %d\n", lastack+1);
 			}
+			longueur_recu = PAYLOAD_SIZE;
 		}
 	} //-> a enlever
 	//} -> a remettre
