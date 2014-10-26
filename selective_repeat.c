@@ -23,12 +23,9 @@ void ack_recu(int n_seq, struct window *win){
 	struct paquet *paq;
 	for(i=0; i< ((win->nb_elem)-(win->nb_elem_vide)); i++){
 		paq = *((win->buffer)+i);
-		if ((paq->msg)->seq_num <= n_seq){
+		if ((paq->msg)->seq_num <= n_seq || (paq->msg)->seq_num > n_seq+31){
 			paq->ack =1;
 			printf("le paquet avec le numéro de séquence %d à été ack\n", (paq->msg)->seq_num);
-		}
-		else{
-			break; //si le n° de seq est plus grand alors ça sert à rien de continuer
 		}
 	}
 	//déplacer la fenetre, si le premier élément est ack, on déplace la fenetre
