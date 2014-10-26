@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 		{	
 			// Le CRC n'est pas bon ou le type ne vaut pas 1, le paquet doit être discardé
 			printf("Les CRC %d et %d ne correspondent pas, le packet va être discardé\n", crc, packet_struct->crc32);
-			longueur_recu = -1; // Pour quand même continuer dans la boucle
+			longueur_recu = PAYLOAD_SIZE; // Pour quand même continuer le programme (la boucle)
 		}
 		//----------------------------------------------
 		// Les CRC correspondent et le type = 1, le  packet est donc potentiellement correct (faut encore vérifier le numéro de séquence
@@ -263,9 +263,7 @@ int main(int argc, char *argv[])
 	}
 	if (FD_ISSET(sockett, &dispo_envoi))
 	{	
-	*/
-		if (longueur_recu >= PAYLOAD_SIZE || longueur_recu == -1) // Permet de vérifier si le packet qu'on a reçu est le dernier ou pas		
-		{		
+	*/		
 			//printf("Envoi du socket dispo\n");
 			ack_struct->seq_num = lastack+1;
 			int crcAck = crc32(0L, Z_NULL, 0);
@@ -277,14 +275,11 @@ int main(int argc, char *argv[])
 			{
 				printf("Accusé envoyé avec numéro : %d\n", lastack+1);
 			}
-			longueur_recu = PAYLOAD_SIZE;
-		}
+		
 	} //-> a enlever
 	//} -> a remettre
 	
     }	// fin du while
-
-
     fclose(fichier);
     printf("Fin du programme\n");
 } // fin du main
