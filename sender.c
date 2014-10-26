@@ -124,7 +124,7 @@ int main(int argc, char *argv[]){
 		//d'abord envoyer ... --> faire fonction ds le selective repeat
 		if(fini_send == 0 && win->nb_elem == window_size){ 
 			send_window(win,fd, &next_seq_num, &fini_send, sock,addr,sber, splr); // à implémenter ; envoyer un élément si il y en a encore à envoyer
-			next_seq_num ++;
+			
 		}
 		else if (fini_send == 0 && (win->nb_elem)!=window_size){
 			if(window_size<1) window_resize(win,1);
