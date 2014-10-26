@@ -52,13 +52,14 @@ void ack_recu(int n_seq, struct window *win){
 }
 
 
-void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr){
+void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr, int d){
 	if(can_send(win) == 0 && *fini_send == 1){
 		return;
 	}
 	else{
 		int i = 0;
 		 while(win->nb_elem_vide >0 && *fini_send !=1){
+		 	usleep(d*1000);//usleep est en micro seconde et d en milli seconde
 		 	struct msgUDP *msg;
 			create_paquet(fd,*next_seq_num ,&msg,fini_send);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));

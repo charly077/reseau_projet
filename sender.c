@@ -16,7 +16,7 @@
 #include "paquet_creator.h"
 
 
-#define TIMER 3000 // définition du timer pour réenvoyer le premier parquet de la window 
+#define TIMER 10 // définition du timer pour réenvoyer le premier parquet de la window 
 
 
 int main(int argc, char *argv[]){
@@ -43,20 +43,27 @@ int main(int argc, char *argv[]){
 	int window_size=1; // permet de gérer les changement de taille de window
 	int next_seq_num=0;
 
-
+	//premièrement, il faut un minimum d'arguments
+	if(argc<3){
+		fprintf(stderr, "Le nombre d'arguments n'est pas suffisant, les arguments obligatoires sont \"./sender addresse/nom port\" \nex: \"./sender ::1 30000\" qui sera le localhost sur le port 30000 et utilisant l'entrée standart\n ");
+		exit(EXIT_FAILURE);
+	}
 	while(i<argc){
 		if(strcmp(argv[i], "--file")==0){
 			filename = argv[i+1];
 			filenamegive = 1;
 		}
-		if(strcmp(argv[i], "--sber")==0){
+		else if(strcmp(argv[i], "--sber")==0){
 			sber = atoi(argv[i+1]); // si il y a une erreur sber est mis à 0 ....
 		}
-		if(strcmp(argv[i], "--splr")==0){
+		else if(strcmp(argv[i], "--splr")==0){
 			splr = atoi(argv[i+1]); // mis à 0 en cas d'erreur
 		}
-		if(strcmp(argv[i], "--delay")==0){
+		else if(strcmp(argv[i], "--delay")==0){
 			delay = atoi(argv[i+1]); // mis à 0 en cas d'erreur
+		}
+		else{
+			fprintf(stderr,"l'argument %s n'est pas correcte\n les arguments accepté sont [--sber x] [--splr y] [--delay d], x en pourmille, y en pourcent, d en milliseconde",argv[i]);
 		}
 
 		i++;
@@ -120,7 +127,7 @@ int main(int argc, char *argv[]){
 		timeout.tv_usec = TIMER * 1000; // recréation du timer
 		//tant qu'il y a de la place dans la window, on envoie ...
 		if(fini_send == 0 && win->nb_elem == window_size){ 
-			send_window(win,fd, &next_seq_num, &fini_send, sock,addr,sber, splr); // à implémenter ; envoyer un élément si il y en a encore à envoyer		
+			send_window(win,fd, &next_seq_num, &fini_send, sock,addr,sber, splr,delay); // à implémenter ; envoyer un élément si il y en a encore à envoyer		
 		}
 		else if (fini_send == 0 && (win->nb_elem)!=window_size){
 			if(window_size<1) window_resize(win,1);
