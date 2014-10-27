@@ -81,7 +81,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 			}
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
-			(*next_seq_num) = (*next_seq_num)+1 % 255;
+			(*next_seq_num) = (*next_seq_num)+1 % 256;
 		 }
 	}
 }
@@ -97,10 +97,15 @@ void create_window(struct window **win, int buffer_size){
 
 void window_resize(struct window *win, int buffer_size){
 	if(((win->nb_elem)-(win->nb_elem_vide)) <= buffer_size){ // si ces condition il y a déjà plus d element envoyé que la nouvelle taille, on attend ...
-		struct paquet **new_buff = (struct paquet **) malloc(sizeof(struct paquet *));
-		strncpy((void *)new_buff, (void *)win->buffer, sizeof(struct paquet *) * ((win->nb_elem)-(win->nb_elem_vide)));
-		free(win->buffer);
+		int nb_elem_copier = (win->nb_elem)-(win->nb_elem_vide);
+		struct paquet **new_buff = (struct paquet **) malloc(sizeof(struct paquet *) * buffer_size);
+		int i;
+		for(i=0;i<nb_elem_copier;i++){
+			*(new_buff + i)=*(win->buffer + i);
+		}
+		struct paquet **paq_free = (win->buffer);
 		(win->buffer) = new_buff;
+		free(paq_free);
 		win->nb_elem_vide = buffer_size - ((win->nb_elem)-(win->nb_elem_vide));
 		win->nb_elem = buffer_size;
 	}
