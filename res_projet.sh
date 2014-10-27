@@ -6,4 +6,4 @@ make clean
 make receiver
 make sender
 
-./receiver --file coucou localhost 30000
+./receiver --file coucou ::1 30000

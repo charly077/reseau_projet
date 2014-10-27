@@ -16,7 +16,7 @@
 #include "paquet_creator.h"
 
 
-#define TIMER 10 // définition du timer pour réenvoyer le premier parquet de la window 
+#define TIMER 1000 // définition du timer pour réenvoyer le premier parquet de la window 
 
 
 int main(int argc, char *argv[]){
@@ -29,6 +29,7 @@ int main(int argc, char *argv[]){
 	struct addrinfo hints; // va nous permettre de dire qu'on veut du IPv6 et du UDP
 	int s; // pour gérer les erreur de getaddrinfo
 	int sock; // pour définir le socket
+	int errr; // compteur d'erreur
 
 	struct window *win; // la window
 
@@ -148,6 +149,7 @@ int main(int argc, char *argv[]){
 		}	
 		else if (select_result == 0){
 			//ça signifie que le timer a expiré, il faut donc réenvoyer le premier élément de la liste
+			if(win->nb_elem_vide != win->nb_elem){
 			int size_sendto = sendto(sock, (*(win->buffer))->msg,sizeof(struct msgUDP),0,addr->ai_addr,addr->ai_addrlen);
 			if(size_sendto != sizeof(struct msgUDP)){
 				fprintf(stderr, "il y a une erreur lors de l'envoie d'un message après timer select:\n%s\n",strerror(errno));
@@ -157,8 +159,14 @@ int main(int argc, char *argv[]){
 				exit(EXIT_FAILURE);
 			}
 			printf("Suite à l'expiration du timer, le premier paquet de la fenetre à été réenvoyé\n"); 
+			}
+			if(errr > 5){
+				fprintf(stderr, "Expiration du timer répetitive sans rien dans la window à réenvoyer");
+				exit(EXIT_FAILURE);
+			}
 		}
 		else if(select_result>0 && FD_ISSET(sock,&read_ack)) {
+			errr =0; // remise à 0 du compteur à erreur ...
 			//ça veut dire que j'ai recu un ack
 			struct msgUDP *msg = (struct msgUDP *) malloc(sizeof(struct msgUDP));
 			int size_recv =  recvfrom(sock, (void *) msg, sizeof(struct msgUDP),0,  addr->ai_addr, &(addr->ai_addrlen));
