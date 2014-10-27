@@ -23,38 +23,44 @@ void ack_recu(int n_seq, struct window *win){
 	struct paquet *paq;
 	for(i=0; i< ((win->nb_elem)-(win->nb_elem_vide)); i++){
 		paq = *((win->buffer)+i);
-		if ((paq->msg)->seq_num <= n_seq){
+		if ((paq->msg)->seq_num <= n_seq || (paq->msg)->seq_num > n_seq+31){
+			int a = paq->ack;
 			paq->ack =1;
-			printf("le paquet avec le numéro de séquence %d à été ack\n", (paq->msg)->seq_num);
-		}
-		else{
-			break; //si le n° de seq est plus grand alors ça sert à rien de continuer
+			if (a==1){
+				printf("le paquet avec le numéro de séquence %d à été ack\nDe plus le premier elem de la window est %d\n", (paq->msg)->seq_num,((*win->buffer)->msg)->seq_num);
+			}
 		}
 	}
 	//déplacer la fenetre, si le premier élément est ack, on déplace la fenetre
 	while((*(win->buffer))->ack == 1){
+		int seq_del = ((*(win->buffer))->msg)->seq_num;
 		win->nb_elem_vide ++;
 		free((*(win->buffer))->msg); // libere l'espace du msgUDP
 		struct paquet *paq_tofree = *(win->buffer);
 		free(paq_tofree);
 		(*(win->buffer))->ack=0;//pour s'assurer de ne pas boucler car l'element n'est pas suprimer de la mémoire si il n'y a rien à copier dessus
-		struct paquet ** buff2 = (struct paquet **) malloc((win->nb_elem -1 )*sizeof(struct paquet *));
-		strncpy((void *)buff2, (void *)((win->buffer)+1),((win->nb_elem)-1) * sizeof(struct paquet *));
-		strncpy((void *)(win->buffer),(void *)(buff2), ((win->nb_elem)-1) * sizeof(struct paquet *));
-		free(buff2);
-		printf("la fenetre à été déplacée\n");
+		int j;
+		for(j=0; j< ((win->nb_elem)-(win->nb_elem_vide)) && j< ((win->nb_elem)-1);j++){
+			*(win->buffer + j) = *(win->buffer+j+1);
+		}
+		//struct paquet ** buff2 = (struct paquet **) malloc((win->nb_elem -1 )*sizeof(struct paquet *));
+		//strncpy((void *)buff2, (void *)((win->buffer)+1),((win->nb_elem)-1) * sizeof(struct paquet *));
+		//strncpy((void *)(win->buffer),(void *)(buff2), ((win->nb_elem)-1) * sizeof(struct paquet *));
+		//free(buff2);
+		printf("la fenetre à été déplacée et l'élément %d supprimé\n",seq_del);
 		
 	}
 }
 
 
-void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr){
+void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr, int d){
 	if(can_send(win) == 0 && *fini_send == 1){
 		return;
 	}
 	else{
 		int i = 0;
 		 while(win->nb_elem_vide >0 && *fini_send !=1){
+		 	usleep(d*1000);//usleep est en micro seconde et d en milli seconde
 		 	struct msgUDP *msg;
 			create_paquet(fd,*next_seq_num ,&msg,fini_send);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));
@@ -79,7 +85,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 			}
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
-			(*next_seq_num) = (*next_seq_num)+1 % 255;
+			(*next_seq_num) = (*next_seq_num)+1 % 256;
 		 }
 	}
 }
@@ -95,10 +101,15 @@ void create_window(struct window **win, int buffer_size){
 
 void window_resize(struct window *win, int buffer_size){
 	if(((win->nb_elem)-(win->nb_elem_vide)) <= buffer_size){ // si ces condition il y a déjà plus d element envoyé que la nouvelle taille, on attend ...
-		struct paquet **new_buff = (struct paquet **) malloc(sizeof(struct paquet *));
-		strncpy((void *)new_buff, (void *)win->buffer, sizeof(struct paquet *) * ((win->nb_elem)-(win->nb_elem_vide)));
-		free(win->buffer);
+		int nb_elem_copier = (win->nb_elem)-(win->nb_elem_vide);
+		struct paquet **new_buff = (struct paquet **) malloc(sizeof(struct paquet *) * buffer_size);
+		int i;
+		for(i=0;i<nb_elem_copier;i++){
+			*(new_buff + i)=*(win->buffer + i);
+		}
+		struct paquet **paq_free = (win->buffer);
 		(win->buffer) = new_buff;
+		free(paq_free);
 		win->nb_elem_vide = buffer_size - ((win->nb_elem)-(win->nb_elem_vide));
 		win->nb_elem = buffer_size;
 	}
@@ -113,7 +124,7 @@ void free_window(struct window *win){
 		free((*(win->buffer))->msg); //suppression de la mémoire allouée pour la struct msgUDP
 		free(*(win)->buffer); // suppression de la mémoire allouée pour le paquet
 	}
-	free(win->buffer);//suppression de la mémoire allouée pour le buffer
+	//free(win->buffer);//suppression de la mémoire allouée pour le buffer
 	free(win); // suppression de la mémoire allouée pour la windows
 	printf("la mémoire alloué à la fenêtre et à ses sous-éléments à été libérée\n");
 }

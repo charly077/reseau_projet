@@ -50,7 +50,7 @@ int file_desc(char *filename){
 void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send){
 	char *payload;
 	int size = tab_512b(desc, &payload);
-	printf("the payload (taille est de %d) is : \n%s\n\n\n\n",size, payload);
+//	printf("the payload (taille est de %d) is : \n%s\n\n\n\n",size, payload);
 	struct msgUDP *new_paquet = (struct msgUDP *) malloc(sizeof(struct msgUDP));
 	new_paquet->type = PTYPE_DATA;
 	new_paquet->window=0;

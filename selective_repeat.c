@@ -24,12 +24,16 @@ void ack_recu(int n_seq, struct window *win){
 	for(i=0; i< ((win->nb_elem)-(win->nb_elem_vide)); i++){
 		paq = *((win->buffer)+i);
 		if ((paq->msg)->seq_num <= n_seq || (paq->msg)->seq_num > n_seq+31){
+			int a = paq->ack;
 			paq->ack =1;
-			printf("le paquet avec le numéro de séquence %d à été ack\n", (paq->msg)->seq_num);
+			if (a==1){
+				printf("le paquet avec le numéro de séquence %d à été ack\nDe plus le premier elem de la window est %d\n", (paq->msg)->seq_num,((*win->buffer)->msg)->seq_num);
+			}
 		}
 	}
 	//déplacer la fenetre, si le premier élément est ack, on déplace la fenetre
 	while((*(win->buffer))->ack == 1){
+		int seq_del = ((*(win->buffer))->msg)->seq_num;
 		win->nb_elem_vide ++;
 		free((*(win->buffer))->msg); // libere l'espace du msgUDP
 		struct paquet *paq_tofree = *(win->buffer);
@@ -43,7 +47,7 @@ void ack_recu(int n_seq, struct window *win){
 		//strncpy((void *)buff2, (void *)((win->buffer)+1),((win->nb_elem)-1) * sizeof(struct paquet *));
 		//strncpy((void *)(win->buffer),(void *)(buff2), ((win->nb_elem)-1) * sizeof(struct paquet *));
 		//free(buff2);
-		printf("la fenetre à été déplacée\n");
+		printf("la fenetre à été déplacée et l'élément %d supprimé\n",seq_del);
 		
 	}
 }
@@ -51,6 +55,7 @@ void ack_recu(int n_seq, struct window *win){
 
 void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr, int d){
 	if(can_send(win) == 0 && *fini_send == 1){
+		printf("la fenetre est remplie ...\n");
 		return;
 	}
 	else{

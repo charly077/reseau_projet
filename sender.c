@@ -16,7 +16,7 @@
 #include "paquet_creator.h"
 
 
-#define TIMER 1000 // définition du timer pour réenvoyer le premier parquet de la window 
+#define TIMER 800 // définition du timer pour réenvoyer le premier parquet de la window 
 
 
 int main(int argc, char *argv[]){
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]){
 	int s; // pour gérer les erreur de getaddrinfo
 	int sock; // pour définir le socket
 	int errr; // compteur d'erreur
-
+	int last_ack_test = 200; //nb impossible 
 	struct window *win; // la window
 
 	int select_result; // pour stocker le résultat du select()
@@ -185,7 +185,34 @@ int main(int argc, char *argv[]){
 				else{
 					window_size = (int)(msg->window); // attention vérif conversion
 				}	
-				ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
+				if(msg->seq_num == last_ack_test){
+					int ij;
+					int ok=0;
+					for(ij=0; ij< (win->nb_elem - win->nb_elem_vide); i++){
+						if(((*(win->buffer+ij))->msg)->seq_num == last_ack_test){
+							int size_sendto = sendto(sock, (*(win->buffer+ij))->msg,sizeof(struct msgUDP),0,addr->ai_addr,addr->ai_addrlen);
+							if(size_sendto != sizeof(struct msgUDP)){
+								fprintf(stderr, "il y a une erreur lors de l'envoie d'un message après 2 ack similaires \n%s\n",strerror(errno));
+								free_window(win);
+								freeaddrinfo(res);
+								close(sock);
+								exit(EXIT_FAILURE);
+							}
+							ok=1;
+							printf("l'élement %d a été réenvoyé après 2ack similaires\n", ((*(win->buffer+ij))->msg)->seq_num);
+							break;
+						}
+					}
+					if(ok == 0){
+						fprintf(stderr,"il y a eu une erreur lors du réenvoi après un ack, elem 1 win %d elem demandé %d\n",((*(win->buffer+ij))->msg)->seq_num, msg->seq_num);
+						exit(EXIT_FAILURE);
+					}
+					last_ack_test--;// permet de ne pas rerentrer dans la boucle
+				}
+				else{
+					ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
+				}
+				last_ack_test = msg->seq_num;
 				printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg->seq_num);
 				if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
 					fini =1; // fin de l'envoie
