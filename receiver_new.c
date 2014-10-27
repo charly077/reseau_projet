@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: %s --file filename hostname port\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+    // getopt !!! || getopt_long !!!
     if (argc == 5)
 	{
 		// copier le filename
@@ -247,7 +248,7 @@ int main(int argc, char *argv[])
 		{
 			tailleFenetre = tailleFenetre * 2;
 		}	
-		else if (h >= 200 && h <= 204)
+		else if (h >= 220 && h <= 223)
 		{
 			tailleFenetre = tailleFenetre / 2;
 		}
@@ -255,6 +256,8 @@ int main(int argc, char *argv[])
 		{
 			//tailleFenetre = 31;
 		}
+		
+		tailleFenetre = 31;
 		maximum = minimum + (tailleFenetre-1);	
 		
 		printf("taille fenêtre envoyée : %d\n", tailleFenetre);		
