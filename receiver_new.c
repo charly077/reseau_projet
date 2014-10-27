@@ -17,13 +17,12 @@
 #define PTYPE_DATA 1
 #define PTYPE_ACK 2
 
-// METTRE LA LONGUEUR DES MESSAGES ENVOYE A +1 !!! pour qu'il mette le 
 int main(int argc, char *argv[])
 {
     struct addrinfo hints;
     struct addrinfo *result, *rp;
 
-    	char filename[20];
+    char filename[20];
 	int port;
 	char *port_to_string;
 	char *hostname;
@@ -56,35 +55,49 @@ int main(int argc, char *argv[])
 	printf("Nom du programme : %s , nom du fichier : %s , nom de l'hote attendu : %s et numéro de port : %d\n", argv[0], filename, hostname, port);
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET6;    /* Allow IPv4 or IPv6 */
+    hints.ai_family = AF_UNSPEC; //AF_INET6;    /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
     hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
     hints.ai_protocol = 0;          /* Any protocol */
 
-
+    int sockett; 
     int s;
-    s = getaddrinfo(hostname, port_to_string, &hints, &result); //port_to_string
-    if (s != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-        exit(EXIT_FAILURE);
+    while (1)
+    {
+    	printf("On attend dans la boucle la connexion\n");
+
+    	s = getaddrinfo(NULL, port_to_string, &hints, &result); //port_to_string
+    	if (s != 0) {
+        	fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        	exit(EXIT_FAILURE);
+	    }
+
+    	 						// ATTENTION -> socket = descripteur de fichier (comme stdout,FILE, ...) 
+    	for (rp = result; rp != NULL; rp = rp->ai_next) 
+    	{
+        	sockett = socket(rp->ai_family, rp->ai_socktype,rp->ai_protocol);
+
+        	recvfrom(sockett, NULL, 512, rp->ai_flags, rp->ai_addr, &(rp->ai_addrlen)); //rp->ai_flags, rp->ai_addr, &(rp->ai_addrlen));
+
+        	if (sockett == -1)
+            	continue;
+
+        	if (bind(sockett, rp->ai_addr, rp->ai_addrlen) == 0)
+            	break;                  // Success 
+
+        	close(sockett);
+    	}
+
+ 	   if (rp == NULL)					 // No address succeeded
+ 	   {               
+    	    fprintf(stderr, "Could not bind\n");
+        	//exit(EXIT_FAILURE);
+    	}
+    	else
+    		break;
     }
 
-    int sockett;   						// ATTENTION -> socket = descripteur de fichier (comme stdout,FILE, ...) 
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
-        sockett = socket(rp->ai_family, rp->ai_socktype,rp->ai_protocol);
-        if (sockett == -1)
-            continue;
-
-        if (bind(sockett, rp->ai_addr, rp->ai_addrlen) == 0)
-            break;                  // Success 
-
-        close(sockett);
-    }
-
-    if (rp == NULL) {               // No address succeeded
-        fprintf(stderr, "Could not bind\n");
-        exit(EXIT_FAILURE);
-    }
+    
 
     printf("Connexion réussie !\n");
 
