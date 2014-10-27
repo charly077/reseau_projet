@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
     struct msgUDP *packet_struct= NULL;
 
-    char buffer_tot[255][PACKET_SIZE];
+    char buffer_tot[256][PACKET_SIZE];
     memset(buffer_tot, 0, sizeof(buffer_tot)); // Pour pouvoir le comparer au char c afin de déterminer là ou il y a des données et calculer le lastack
     uint8_t maximum = 0;			// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
     uint8_t lastack = -1;						// Dernier qu'on a reçu
