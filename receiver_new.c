@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 	else 
 	{
 		// prendre le filename sur le stdin
-		printf("Veuillez entrez le nom du fichier (max 19 cara.)\n");
+		printf("Veuillez entrez le nom du fichier (max 19 caractères)\n");
 		scanf("%19s",filename);					// Comment on fait pour l'extension ???
 		hostname = argv[1];
 		port = atoi(argv[2]);
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 	printf("Nom du programme : %s , nom du fichier : %s , nom de l'hote attendu : %s et numéro de port : %d\n", argv[0], filename, hostname, port);
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC; //AF_INET6;    /* Allow IPv4 or IPv6 */
+    hints.ai_family = AF_INET6; //AF_UNSPEC;     /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
     hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
     hints.ai_protocol = 0;          /* Any protocol */
@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
 
     printf("Connecté à : %s\n", (rp->ai_addr)->sa_data);
 
-
     freeaddrinfo(result);           // No longer needed 
 
 
@@ -106,11 +105,11 @@ int main(int argc, char *argv[])
     int longueur_recu = PAYLOAD_SIZE;
     char packet_buf[PACKET_SIZE]; 			// buffer de réception du packet
     char payload_buf[PAYLOAD_SIZE]; // PAYLOAD_SIZE    		// buffer de réception du payload
-    char ack_buf[PACKET_SIZE];
+    char ack_buf[PACKET_SIZE];		// Le buffer qui représente l'accusé de réception
 
-    struct msgUDP *packet_struct= NULL;
+    struct msgUDP *packet_struct= NULL;	// Initialisation de la structure d'un packet
 
-    char buffer_tot[256][PACKET_SIZE];
+    char buffer_tot[256][PACKET_SIZE];			// Tableau de char qui permet de stocker les packets reçu
     memset(buffer_tot, 0, sizeof(buffer_tot)); // Pour pouvoir le comparer au char c afin de déterminer là ou il y a des données et calculer le lastack
     uint8_t maximum = 0;			// Maximum là ou on peut écrire (-> définit aussi la taille de la fenêtre dans les ACC !!!, non, parce que pas int)
     uint8_t lastack = -1;						// Dernier qu'on a reçu
@@ -125,7 +124,7 @@ int main(int argc, char *argv[])
 	if (fichier == NULL)
 	{
     	printf("Error opening file!\n");
-    	exit(1);
+    	exit(EXIT_FAILURE);
 	}
 
 	// Préparation de l'accusé
@@ -146,8 +145,6 @@ int main(int argc, char *argv[])
 	uint8_t j = 0;
 	int permission_lecture = 0;
 	fd_set donne_dispo;
-	int permission_envoi = 0;
-	fd_set dispo_envoi;
 	
 	int h = 0;	
 
@@ -158,11 +155,7 @@ int main(int argc, char *argv[])
 	
 	    while(longueur_recu >= PAYLOAD_SIZE || j != lastack) 
 	    {
-	    	//time_spent = 512/(8000*time_spent); // 512;
-	    	//printf("Vitesse de connexion : %f kbytes/sec\n", time_spent);
-
-	    	//begin = clock();
-		printf("%d et %d \n", j, lastack);
+		//printf("%d et %d \n", j, lastack);
 
 		FD_ZERO(&donne_dispo);	  				// Remise à 0 de la struct donne dispo
 		FD_SET(sockett, &donne_dispo);				// Pas compris ???
@@ -181,8 +174,8 @@ int main(int argc, char *argv[])
 		}
 		if(FD_ISSET(sockett, &donne_dispo))
 	   	{
-	      		/* des données sont disponibles sur le socket */
-	      		/* traitement des données */
+	      		// des données sont disponibles sur le socket 
+	      		// traitement des données 
 			longueur_recu = recvfrom(sockett, packet_buf, PACKET_SIZE, 0, rp->ai_addr, &(rp->ai_addrlen)); // !!!! ON A LES INFOS DU SENDER QUI SE METTE DANS addr_sender
 			if (longueur_recu == -1) {
 			    printf("Problème, le message reçu n'est pas valide...\n" );            
@@ -192,7 +185,6 @@ int main(int argc, char *argv[])
 			packet_struct = (struct msgUDP *) packet_buf;
 
 			// Checker Type et CRC
-			//uLong crc = crc32(0L, Z_NULL, 0);   		
 			int crc = (int) crc32(0, (void *) packet_struct, sizeof(msgUDP)-sizeof(int)); //- sizeof(uLong)); // J'ai modifié ici (de gcc à clang)
 
 			if (crc != packet_struct->crc32 || packet_struct->type != PTYPE_DATA)
@@ -255,7 +247,7 @@ int main(int argc, char *argv[])
 		// ----------------------------------------
 		// Envoyer un ACK
 		// Si les données sont dispo en envoi (pour envoyer l'ACK)
-		tailleFenetre = 31;	
+			tailleFenetre = 31;	
 			h++;
 			if(h <= 4)
 			{
@@ -267,7 +259,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-			//tailleFenetre = 31;
+				//tailleFenetre = 31;
 			}
 			
 			maximum = minimum + (tailleFenetre-1);	
@@ -285,13 +277,10 @@ int main(int argc, char *argv[])
 			{
 				printf("Accusé envoyé avec numéro : %d\n", lastack+1);
 			}		
-			//end = clock();
-			//time_spent = (double) (end-begin) / CLOCKS_PER_SEC;
 		} 
 	
     }	// fin du while
+
     fclose(fichier);
-    end = clock();
-    time_spent = (double) (end-begin) / CLOCKS_PER_SEC;
-    printf("Fin du programme, la copie s'est exécutée en %f secondes\n", time_spent);
+    printf("Fin du programme, la copie s'est correctement exécutée\n");
 } // fin du main
