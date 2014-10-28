@@ -17,7 +17,7 @@ int can_send(struct window *win){
 	return win->nb_elem_vide > 0;
 }
 
-void ack_recu(int n_seq, struct window *win,int sock, struct addrinfo *addr){
+void ack_recu(int n_seq, struct window *win){
 	if(n_seq==-1) n_seq = 255;
 	//parcourir toute la window, pour voir si le paquet est dedans
 	int i;
@@ -52,11 +52,6 @@ void ack_recu(int n_seq, struct window *win,int sock, struct addrinfo *addr){
 		printf("la fenetre à été déplacée et l'élément %d supprimé\n",seq_del);
 		
 	}
-	/* pour debug
-	for(i=0; i<((win->nb_elem)-(win->nb_elem_vide));i++){
-		paq =  *((win->buffer)+i);
-		printf("Elem %d de la fenetre, n_seq = %d et il ack = %d\n", i, paq->msg->seq_num, paq->ack);
-	}*/
 }
 
 
@@ -116,6 +111,7 @@ void window_resize(struct window *win, int buffer_size){
 			*(new_buff + i)=*(win->buffer + i);
 		}
 		struct paquet **paq_free = (win->buffer);
+		free(win->buffer);
 		(win->buffer) = new_buff;
 		free(paq_free);
 		win->nb_elem_vide = buffer_size - ((win->nb_elem)-(win->nb_elem_vide));
@@ -129,10 +125,10 @@ void free_window(struct window *win){
 	int i;
 	int nb_elem_sup = (win->nb_elem) - (win->nb_elem_vide);
 	for(i=0; i<nb_elem_sup;i++){
-		free((*(win->buffer))->msg); //suppression de la mémoire allouée pour la struct msgUDP
-		free(*(win)->buffer); // suppression de la mémoire allouée pour le paquet
+		free((*(win->buffer+i))->msg); //suppression de la mémoire allouée pour la struct msgUDP
+		free(*(win)->buffer+i); // suppression de la mémoire allouée pour le paquet
 	}
-	//free(win->buffer);//suppression de la mémoire allouée pour le buffer
+	free(win->buffer);//suppression de la mémoire allouée pour le buffer
 	free(win); // suppression de la mémoire allouée pour la windows
 	printf("la mémoire alloué à la fenêtre et à ses sous-éléments à été libérée\n");
 }

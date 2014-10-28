@@ -29,9 +29,9 @@ int file_desc(char *filename);
 
 
 /*
-*@pre : le descripteur de l'entrée standart (0) ou le descripteur du fichier utilisé.
-*@post : fait pointer le tableau de char *paquet vers un tableau de 520bytes correspondant au paquet suivant, null
-*	 si tous les paquets on été envoyé
+*@pre : le descripteur de l'entrée standart (STDIN_FILENO) ou le descripteur du fichier utilisé.
+*@post : fait pointer le tableau de char *paquet vers un tableau de 520 bytes correspondant au paquet suivant, null
+*	 si tous les paquets on été envoyés
 */
 void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send);
 
