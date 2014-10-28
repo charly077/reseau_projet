@@ -12,7 +12,8 @@ all: sender receiver
 
 sender: sender.c struct.h paquet_creator.o selective_repeat.o
 	$(GCC) sender.c -lz  -g -o sender paquet_creator.o selective_repeat.o 	
-receiver : receiver_new.c paquet_creator.o
+
+receiver: receiver_new.c paquet_creator.o
 	$(GCC) receiver_new.c -lz -o receiver paquet_creator.o
 
 paquet_creator.o : paquet_creator.h struct.h paquet_creator.c

@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 		// ----------------------------------------
 		// Envoyer un ACK
 		// Si les données sont dispo en envoi (pour envoyer l'ACK)
-		tailleFenetre = 31;	
+			
 			h++;
 			if(h <= 4)
 			{
@@ -267,12 +267,51 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-			//tailleFenetre = 31;
+				//tailleFenetre = 31;
 			}
 			
+			tailleFenetre = 31;
 			maximum = minimum + (tailleFenetre-1);	
 			
+<<<<<<< HEAD
+		}
+	
+	// ----------------------------------------
+	// Envoyer un ACK
+	// Si les données sont dispo en envoi (pour envoyer l'ACK)
+		tailleFenetre = 31;	
+		h++;
+		if(h <= 4)
+		{
+			tailleFenetre = tailleFenetre * 2;
+		}	
+		else if (h >= 220 && h <= 223)
+		{
+			tailleFenetre = tailleFenetre / 2;
+		}
+		else
+		{
+			//tailleFenetre = 10;
+		}
+		
+		maximum = minimum + (tailleFenetre-1);	
+		
+		printf("taille fenêtre envoyée : %d\n", tailleFenetre);		
+		
+		ack_struct->window = tailleFenetre;
+		ack_struct->seq_num = lastack+1;
+		int crcAck = crc32(0L, Z_NULL, 0);
+		//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
+		crcAck = (int) crc32(0, (void *) ack_struct, sizeof(ack_struct) -sizeof(int)); //- sizeof(uLong));
+		ack_struct->crc32 = crcAck;
+	
+		if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
+		{
+			printf("Accusé envoyé avec numéro : %d\n", lastack+1);
+		}		
+=======
 			printf("taille fenêtre envoyée : %d\n", tailleFenetre);		
+>>>>>>> fdae832bf57139e22b07e48cde0143b6f8f18f13
 			
 			ack_struct->window = tailleFenetre;
 			ack_struct->seq_num = lastack+1;
