@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 	// ----------------------------------------
 	// Envoyer un ACK
 	// Si les données sont dispo en envoi (pour envoyer l'ACK)
-		
+		tailleFenetre = 31;	
 		h++;
 		if(h <= 4)
 		{
@@ -254,10 +254,9 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			//tailleFenetre = 31;
+			//tailleFenetre = 10;
 		}
 		
-		tailleFenetre = 31;
 		maximum = minimum + (tailleFenetre-1);	
 		
 		printf("taille fenêtre envoyée : %d\n", tailleFenetre);		

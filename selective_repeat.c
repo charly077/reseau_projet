@@ -17,20 +17,26 @@ int can_send(struct window *win){
 	return win->nb_elem_vide > 0;
 }
 
-void ack_recu(int n_seq, struct window *win){
+void ack_recu(int n_seq, struct window *win,int sock, struct addrinfo *addr){
+	if(n_seq==-1) n_seq = 255;
 	//parcourir toute la window, pour voir si le paquet est dedans
 	int i;
+	int count;
 	struct paquet *paq;
-	for(i=0; i< ((win->nb_elem)-(win->nb_elem_vide)); i++){
-		paq = *((win->buffer)+i);
-		if ((paq->msg)->seq_num <= n_seq || (paq->msg)->seq_num > n_seq+31){
-			int a = paq->ack;
-			paq->ack =1;
-			if (a==1){
-				printf("le paquet avec le numéro de séquence %d à été ack\nDe plus le premier elem de la window est %d\n", (paq->msg)->seq_num,((*win->buffer)->msg)->seq_num);
-			}
+	for(count=0; count< ((win->nb_elem)-(win->nb_elem_vide)); count++){
+		paq =  *((win->buffer)+count);
+		if((paq->msg)->seq_num == n_seq) break;
+	}
+	for(i=0; i<count+1;i++){
+		paq =  *((win->buffer)+i);
+		int a = paq->ack;
+		paq->ack =1;
+		if (a==0){
+			printf("le paquet avec le numéro de séquence %d à été ack\nDe plus le premier elem de la window est %d\n", (paq->msg)->seq_num,((*win->buffer)->msg)->seq_num);
 		}
 	}
+
+
 	//déplacer la fenetre, si le premier élément est ack, on déplace la fenetre
 	while((*(win->buffer))->ack == 1){
 		int seq_del = ((*(win->buffer))->msg)->seq_num;
@@ -43,13 +49,14 @@ void ack_recu(int n_seq, struct window *win){
 		for(j=0; j< ((win->nb_elem)-(win->nb_elem_vide)) && j< ((win->nb_elem)-1);j++){
 			*(win->buffer + j) = *(win->buffer+j+1);
 		}
-		//struct paquet ** buff2 = (struct paquet **) malloc((win->nb_elem -1 )*sizeof(struct paquet *));
-		//strncpy((void *)buff2, (void *)((win->buffer)+1),((win->nb_elem)-1) * sizeof(struct paquet *));
-		//strncpy((void *)(win->buffer),(void *)(buff2), ((win->nb_elem)-1) * sizeof(struct paquet *));
-		//free(buff2);
 		printf("la fenetre à été déplacée et l'élément %d supprimé\n",seq_del);
 		
 	}
+	/* pour debug
+	for(i=0; i<((win->nb_elem)-(win->nb_elem_vide));i++){
+		paq =  *((win->buffer)+i);
+		printf("Elem %d de la fenetre, n_seq = %d et il ack = %d\n", i, paq->msg->seq_num, paq->ack);
+	}*/
 }
 
 
@@ -60,7 +67,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 	}
 	else{
 		int i = 0;
-		 while(win->nb_elem_vide >0 && *fini_send !=1){
+		 while(win->nb_elem_vide >0 && *fini_send !=1 && can_send(win)){
 		 	usleep(d*1000);//usleep est en micro seconde et d en milli seconde
 		 	struct msgUDP *msg;
 			create_paquet(fd,*next_seq_num ,&msg,fini_send);
@@ -73,7 +80,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 				(paq->msg)->payload[0] ^=0xff; // si on doit créer une erreur on inverse le premier bit
 			}
 			// envoie du paquet
-			if(random()%100 > splr)
+			if(random()%100 >= splr)
 			{
 				int nb = sendto(sock, msg, sizeof(struct msgUDP), 0, addr->ai_addr,addr->ai_addrlen);
 				if(nb != sizeof(struct msgUDP)){
@@ -86,7 +93,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 			}
 			printf("le paquet avec le numéro de séquence %d à été envoyé\n", *next_seq_num);
 			win->nb_elem_vide --;
-			(*next_seq_num) = (*next_seq_num)+1 % 256;
+			(*next_seq_num) = ((*next_seq_num)+1) % 256;
 		 }
 	}
 }

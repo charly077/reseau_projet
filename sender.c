@@ -185,7 +185,11 @@ int main(int argc, char *argv[]){
 				else{
 					window_size = (int)(msg->window); // attention vérif conversion
 				}	
-				if(msg->seq_num == last_ack_test){
+				if(msg->seq_num != last_ack_test){
+					printf("j'envoie %d ds ack_recu\n",msg->seq_num);
+					ack_recu(msg->seq_num - 1, win,sock,addr);// il faut faire moins 1
+				}
+				else{
 					int ij;
 					int ok=0;
 					for(ij=0; ij< (win->nb_elem - win->nb_elem_vide); i++){
@@ -199,7 +203,9 @@ int main(int argc, char *argv[]){
 								exit(EXIT_FAILURE);
 							}
 							ok=1;
-							printf("l'élement %d a été réenvoyé après 2ack similaires\n", ((*(win->buffer+ij))->msg)->seq_num);
+							printf("l'élement %d a été réenvoyé après 2 ack similaires\n", ((*(win->buffer+ij))->msg)->seq_num);
+							last_ack_test--;
+							usleep(10000);//s'arrêter un peu pour éviter de toujours recevoir le mm ack
 							break;
 						}
 					}
@@ -207,15 +213,14 @@ int main(int argc, char *argv[]){
 						fprintf(stderr,"il y a eu une erreur lors du réenvoi après un ack, elem 1 win %d elem demandé %d\n",((*(win->buffer+ij))->msg)->seq_num, msg->seq_num);
 						exit(EXIT_FAILURE);
 					}
-					last_ack_test--;// permet de ne pas rerentrer dans la boucle
+					//ack_recu(msg->seq_num - 1, win,sock,addr);//si l'élément n'est pas ds la fenetre, il faut aquitter les éléments
 				}
-				else{
-					ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
-				}
+
 				last_ack_test = msg->seq_num;
 				printf("Un ack a été reçu avec %d comme prochain numéro de séquence attendu \n", msg->seq_num);
-				if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1)
+				if((win->nb_elem_vide)==(win->nb_elem) && fini_send == 1){
 					fini =1; // fin de l'envoie
+				}
 			}
 			free(msg);
 

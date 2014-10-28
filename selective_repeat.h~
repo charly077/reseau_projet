@@ -19,7 +19,7 @@ int can_send(struct window *win);
 *@pre: reçoit un numéro de sequence, la window
 *@post: si le numéro de sequence est dans la liste window, alors on met le ack à 1 pour dire qu'il a été ack
 */
-void ack_recu(int n_seq, struct window *win,int sock, struct addrinfo *addr);
+void ack_recu(int n_seq, struct window *win,int sock);
 
 /*
 *@pre un pointeur vers la structure du paquet à envoyer, et un file descriptor, numéro
