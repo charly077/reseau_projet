@@ -2,7 +2,7 @@
 #  Makefile pour le projet de réseau 2014
 #
 
-GCC = gcc
+GCC = clang
 AR = ar
 ARFLAGS = -cvq
 CFLAGS =  -g -c 
