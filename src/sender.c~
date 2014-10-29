@@ -131,7 +131,7 @@ int main(int argc, char *argv[]){
 			select_result = select(sock+1,&read_ack,NULL,NULL,&timeout);
 		}while(select_result == -1 || errno == EINTR); // permet d'éviter des erreurs lors de l'exécution de select
 	
-		if(select_result<=-1){
+		if(select_result<-1){
 			fprintf(stderr, "Il y a eu une erreur lors du select: %s\n", strerror(errno));
 			free_window(win);
 			freeaddrinfo(res);
