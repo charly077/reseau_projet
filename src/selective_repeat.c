@@ -63,7 +63,7 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 	else{
 		int i = 0;
 		 while(win->nb_elem_vide >0 && *fini_send !=1 && can_send(win)){
-		 	usleep(d*1000);//usleep est en micro seconde et d en milli seconde
+		 	usleep(d*1000);//usleep est en micro seconde et d en milli seconde qui permet d'ajouter le délay entre l'envoie de deux paquets
 		 	struct msgUDP *msg;
 			create_paquet(fd,*next_seq_num ,&msg,fini_send);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));
@@ -113,7 +113,6 @@ void window_resize(struct window *win, int buffer_size){
 		struct paquet **paq_free = (win->buffer);
 		free(win->buffer);
 		(win->buffer) = new_buff;
-		free(paq_free);
 		win->nb_elem_vide = buffer_size - ((win->nb_elem)-(win->nb_elem_vide));
 		win->nb_elem = buffer_size;
 	}
