@@ -5,12 +5,33 @@
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/time.h>
 
 
 #include "struct.h"
 #include "paquet_creator.h"
 #include "selective_repeat.h"
 
+#define CONVERSION_S_US 1000000
+
+void delay(int usec){
+    struct timeval t1, t2;
+    double time;
+    int err = gettimeofday(&t1, NULL);
+    if(err == -1){
+        fprintf(stderr, "attention, il y a eu une erreur lors de l'exécution de gettimeofday\n%s\n", strerror(errno));
+    }
+    while(1){
+        err = gettimeofday(&t2, NULL);
+        if(err == -1){
+            fprintf(stderr, "attention, il y a eu une erreur lors de l'exécution de gettimeofday\n%s\n", strerror(errno));
+        }
+        time =(t2.tv_sec * CONVERSION_S_US + t2.tv_usec) - (t1.tv_sec * CONVERSION_S_US + t1.tv_usec);
+        if(time >= usec){
+            break;
+        }
+    }
+}
 
 
 int can_send(struct window *win){
@@ -63,7 +84,6 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 	else{
 		int i = 0;
 		 while(win->nb_elem_vide >0 && *fini_send !=1 && can_send(win)){
-		 	usleep(d*1000);//usleep est en micro seconde et d en milli seconde qui permet d'ajouter le délay entre l'envoie de deux paquets
 		 	struct msgUDP *msg;
 			create_paquet(fd,*next_seq_num ,&msg,fini_send);
 			struct paquet *paq = (struct paquet *) malloc(sizeof(struct paquet));
@@ -74,6 +94,8 @@ void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,in
 			if(err_bit){
 				(paq->msg)->payload[0] ^=0xff; // si on doit créer une erreur on inverse le premier bit
 			}
+            //application du délay avant envoi:
+             delay(d * 1000);
 			// envoie du paquet
 			if(random()%100 >= splr)
 			{
