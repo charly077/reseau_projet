@@ -13,17 +13,7 @@
 #include "struct.h"
 
 #define TAILLE_PAYLOAD 512
-/* TEST
-int main(int argc, char *argv[]){
-	int fd = file_desc("coucou1.txt");
-	char *buf = NULL;
-	printf("bonjour j'ai un element de %dbytes",tab_512b(fd, &buf));
-	struct msgUDP *msg; 
-	create_paquet(fd,1, &msg);
 
-	return 0;
-}
-*/
 
 int tab_512b(int desc, char **elem){
 	char *buf = (char *) malloc(TAILLE_PAYLOAD); // allouer une place de 512 bytes pour le contenu de l'élément
@@ -57,6 +47,7 @@ void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send
 	new_paquet->seq_num = seq_num;
 	new_paquet->length = size; // taille de l'élément et donc si c'est le dernier paquet la taille est <à 512bytes
 	strncpy(new_paquet->payload, payload, 512);
+	free(payload);
 	//ATTENTION, si size <512, c'est qu'on a envoyé le dernier paquet donc on arrête le programme
 	if(size <512) *fini_send = 1;
 	printf("fini_send = %d\n",*fini_send);

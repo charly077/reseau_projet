@@ -10,22 +10,22 @@
 
 /*
 *@pre prend la structure windows
-*@post renvoie 1 si il y a un element "libre" pour pouvoir décaller la fenetre et faire un nouvel envoie. 0 sinon.
+*@post renvoie 1 si il y a un élément "libre" pour pouvoir décaller la fenetre et faire un nouvel envoie. 0 sinon.
 */
 int can_send(struct window *win);
 
 
 /*
 *@pre: reçoit un numéro de sequence, la window
-*@post: si le numéro de sequence est dans la liste window, alors on met le ack à 1 pour dire qu'il a été ack
+*@post: si le numéro de sequence est dans la liste window, alors on met le ack à 1 pour dire qu'il a été ack et ensuite, s'occupe de déplacer la window
 */
-void ack_recu(int n_seq, struct window *win,int sock, struct addrinfo *addr);
+void ack_recu(int n_seq, struct window *win);
 
 /*
 *@pre un pointeur vers la structure du paquet à envoyer, et un file descriptor, numéro
 * 	de séquence du dernier paquet envoyé, enfin un pointeur vers l'element à mettre
-*	à jour si on le fichier est terminé, un int représentant le socket_fd, et enfin le delay
-*@post si on ne peut pas envoyer d'élem, *paq est mis à null sinon, contient un pointeur vers une structure d'un paquet
+*	à jour si on le fichier est terminé, un int représentant le socket_fd et la struct addrinfo. Tout ce qui concerne les "erreurs" sber, splr et enfin le delay. 
+*@post Envoie des paquets si il y a des la place dans la window
 */
 void send_window(struct window *win, int fd, int *next_seq_num, int *fini_send,int sock, struct addrinfo *addr, int sber,int splr,int d);
 

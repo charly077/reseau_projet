@@ -63,18 +63,18 @@ int main(int argc, char *argv[]){
 		else if(strcmp(argv[i], "--delay")==0){
 			delay = atoi(argv[i+1]); // mis à 0 en cas d'erreur
 		}
-		else{
+		else if(argv[i][1] == '-'){
 			fprintf(stderr,"l'argument %s n'est pas correcte\n les arguments accepté sont [--sber x] [--splr y] [--delay d], x en pourmille, y en pourcent, d en milliseconde",argv[i]);
 		}
 
 		i++;
 	}
-	//printf("filename %s,\nsber %d,\nsplr %d,\ndelay %d.\n", filename, sber, splr, delay); // test pour vérification des arguments
+
 
 	//RECUPERATION DES INFO SUR L'ADDRESSE DU RECEIVER :
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC;//AF_INET6; // je veux juste de l'IPv6
+	hints.ai_family = AF_INET6; // je veux juste de l'IPv6
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags=0;
 	hints.ai_protocol = 0 ; // peut importe le protocol ...
@@ -100,15 +100,6 @@ int main(int argc, char *argv[]){
 	}
 	
 	
-/*
-	//test d'envoi d'un paquet : 
-	int desc = file_desc("coucou1.txt");
-	struct msgUDP *msg;
-	create_paquet(desc, 0, &msg);
-	if(sendto(sock, msg, sizeof(struct msgUDP),0,addr->ai_addr, addr->ai_addrlen)==sizeof(struct msgUDP)) printf("message envoyé :)\n");
-*/	
-
-
 	//if filenamegive == 0 then fdread = 0 (soit le stdin)
 	if(filenamegive == 1) fd = file_desc(filename);
 	else {
@@ -140,7 +131,7 @@ int main(int argc, char *argv[]){
 			select_result = select(sock+1,&read_ack,NULL,NULL,&timeout);
 		}while(select_result == -1 || errno == EINTR); // permet d'éviter des erreurs lors de l'exécution de select
 	
-		if(select_result<-1){
+		if(select_result<=-1){
 			fprintf(stderr, "Il y a eu une erreur lors du select: %s\n", strerror(errno));
 			free_window(win);
 			freeaddrinfo(res);
@@ -187,7 +178,7 @@ int main(int argc, char *argv[]){
 				}	
 				if(msg->seq_num != last_ack_test){
 					printf("j'envoie %d ds ack_recu\n",msg->seq_num);
-					ack_recu(msg->seq_num - 1, win,sock,addr);// il faut faire moins 1
+					ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
 				}
 				else{
 					int ij;
@@ -213,7 +204,7 @@ int main(int argc, char *argv[]){
 						fprintf(stderr,"il y a eu une erreur lors du réenvoi après un ack, elem 1 win %d elem demandé %d\n",((*(win->buffer+ij))->msg)->seq_num, msg->seq_num);
 						exit(EXIT_FAILURE);
 					}
-					//ack_recu(msg->seq_num - 1, win,sock,addr);//si l'élément n'est pas ds la fenetre, il faut aquitter les éléments
+				
 				}
 
 				last_ack_test = msg->seq_num;

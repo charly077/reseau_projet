@@ -41,9 +41,5 @@ struct paquet {
 };
 
 
-struct paquet_to_send{
-	struct paquet *paq; //liste de paquets
-	int nb_elem; //nombre d'elem dans la liste
-};
 
 #endif // fin du header STRUCT_H
