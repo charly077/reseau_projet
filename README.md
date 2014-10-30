@@ -1,6 +1,4 @@
 reseau projet
 =============
 
-projet de bonaventure 
-
-ATTENTION, pour le bon fonctionnement de ce programme, il faut avoir installÃ© zlib 
+Projet réseau 2014, Un makefile permet de compiler les programmes grâce à la fonction make
