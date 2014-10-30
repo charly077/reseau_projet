@@ -27,6 +27,7 @@ Lorsque le timeout expire, nous renvoyons le premier élément dans le buffer car 
 Pour la réception des ack, la stratégie utilisée est de trouver la place de l'élément ack dans le buffer ensuite on peut mettre le ack des paquets se trouvant avant à 1( pour dire que les paquets ont été ack).
 Ensuite on décale la fenêtre tant que le premier paquet est ack.
 Enfin, si on reçoit 2 fois d'affilé un ack avec le même numéro de séquence, c'est qu'il n'a pas été réçu donc on réenvoie l'élément en question pour éviter d'attendre la fin du timer.\\
+De plus, nous avons implémenté le delay, c'est à dire qu'avant d'envoyer un fichier un attends le delay de x ms.
 Pour ce faire, on a utilisé plusieurs structures (se trouvant dans struct.h). 
 
 \begin{itemize}
@@ -57,8 +58,7 @@ Mais nous sommes parvenu à trouver des solutions et à avoir un programme (sender
 
 \section{Test interopérabilité avec le groupe de Romain Henneton et Sundeep Dhillon}
 
-Le test a fonctionné du premier coup 
-
+Pour le test d'interopérabilité, nous avons été en salle intel où nous avons fait les différents tests. Nous avons juste eu quelques difficultées au début mais en comparant les codes on a pu vite voir les différences et prendre la solution qui paraissait la meilleure. Il nous a fallut une dizaines de minutes pour que les différents programmes soient fonctionnel entre eux.
 
 
 
