@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
 	//RECUPERATION DES INFO SUR L'ADDRESSE DU RECEIVER :
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET6; // je veux juste de l'IPv6
+	hints.ai_family = AF_UNSPEC;//AF_INET6; // je veux juste de l'IPv6
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags=0;
 	hints.ai_protocol = 0 ; // peut importe le protocol ...
