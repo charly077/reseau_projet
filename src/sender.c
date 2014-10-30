@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
 			delay = atoi(argv[i+1]); // mis à 0 en cas d'erreur
 		}
 		else if(argv[i][1] == '-'){
-			fprintf(stderr,"l'argument %s n'est pas correcte\n les arguments accepté sont [--sber x] [--splr y] [--delay d], x en pourmille, y en pourcent, d en milliseconde",argv[i]);
+			fprintf(stderr,"l'argument %s n'est pas correcte\n les arguments accepté sont [--file nomfichier] [--sber x] [--splr y] [--delay d], x en pourmille, y en pourcent, d en milliseconde",argv[i]);
 		}
 
 		i++;
@@ -109,6 +109,9 @@ int main(int argc, char *argv[]){
 	//création de la window:
 	create_window(&win, window_size);
 
+	//si il n'y a pas de fichier il faut dire à l'utilisateur qu'on lit sur le stdin
+	printf("Vu qu'aucun fichier n'a été spécifier, nous envoyons ce que le fichier reçoit sur l'entrée standard. \nVeuillez entrer ce qu'il faut envoyer:\n");
+
 	//création du timeout pour select:
 	timeout.tv_sec = 0;
 	timeout.tv_usec = TIMER * 1000; // timer défini en define en ms
@@ -149,7 +152,7 @@ int main(int argc, char *argv[]){
 				close(sock);
 				exit(EXIT_FAILURE);
 			}
-			printf("Suite à l'expiration du timer, le premier paquet de la fenetre à été réenvoyé\n"); 
+			printf("Suite à l'expiration du timer, le premier paquet de la fenêtre à été réenvoyé\n"); 
 			}
 			if(errr > 5){
 				fprintf(stderr, "Expiration du timer répetitive sans rien dans la window à réenvoyer");
@@ -177,7 +180,6 @@ int main(int argc, char *argv[]){
 					window_size = (int)(msg->window); // attention vérif conversion
 				}	
 				if(msg->seq_num != last_ack_test){
-					printf("j'envoie %d ds ack_recu\n",msg->seq_num);
 					ack_recu(msg->seq_num - 1, win);// il faut faire moins 1
 				}
 				else{

@@ -53,7 +53,7 @@ void ack_recu(int n_seq, struct window *win){
 		int a = paq->ack;
 		paq->ack =1;
 		if (a==0){
-			printf("le paquet avec le numéro de séquence %d à été ack\nDe plus le premier elem de la window est %d\n", (paq->msg)->seq_num,((*win->buffer)->msg)->seq_num);
+			printf("le paquet avec le numéro de séquence %d à été ack\n\n", (paq->msg)->seq_num);
 		}
 	}
 
@@ -70,7 +70,7 @@ void ack_recu(int n_seq, struct window *win){
 		for(j=0; j< ((win->nb_elem)-(win->nb_elem_vide)) && j< ((win->nb_elem)-1);j++){
 			*(win->buffer + j) = *(win->buffer+j+1);
 		}
-		printf("la fenetre à été déplacée et l'élément %d supprimé\n",seq_del);
+		printf("la fenetre à été décalée\n");
 		
 	}
 }
@@ -78,7 +78,7 @@ void ack_recu(int n_seq, struct window *win){
 
 void send_window(struct window *win, int fd, int *next_seq_num,int *fini_send,int sock, struct addrinfo *addr,int sber, int splr, int d){
 	if(can_send(win) == 0 && *fini_send == 1){
-		printf("la fenetre est remplie ...\n");
+		printf("la fenetre est remplie.\n");
 		return;
 	}
 	else{
@@ -142,7 +142,6 @@ void window_resize(struct window *win, int buffer_size){
 }
 
 void free_window(struct window *win){
-	printf("Suppression des structures paquets contenu dans la fenêtre\n");
 	int i;
 	int nb_elem_sup = (win->nb_elem) - (win->nb_elem_vide);
 	for(i=0; i<nb_elem_sup;i++){
@@ -151,5 +150,5 @@ void free_window(struct window *win){
 	}
 	free(win->buffer);//suppression de la mémoire allouée pour le buffer
 	free(win); // suppression de la mémoire allouée pour la windows
-	printf("la mémoire alloué à la fenêtre et à ses sous-éléments à été libérée\n");
+	printf("la mémoire allouée à la fenêtre et à ses sous-éléments à été libérée\n");
 }

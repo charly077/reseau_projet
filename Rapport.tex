@@ -28,7 +28,11 @@ Pour la réception des ack, la stratégie utilisée est de trouver la place de l'él
 Ensuite on décale la fenêtre tant que le premier paquet est ack.
 Enfin, si on reçoit 2 fois d'affilé un ack avec le même numéro de séquence, c'est qu'il n'a pas été réçu donc on réenvoie l'élément en question pour éviter d'attendre la fin du timer.\\
 De plus, nous avons implémenté le delay, c'est à dire qu'avant d'envoyer un fichier un attends le delay de x ms.
-Pour ce faire, on a utilisé plusieurs structures (se trouvant dans struct.h). 
+Pour ce faire, on a utilisé plusieurs structures (se trouvant dans struct.h). \\
+\begin{verbatism}
+De plus, au début nous avions des soucis car nous ne laissions pas la place pour le '\0' à la fin des tableaux de char. Nous avons donc décidé d'utiliser uniquement
+les 511 premier bytes de la payload et ne pas s'occuper du dernier.
+\end{verbatism}
 
 \begin{itemize}
 \item{\textbf{msgUDP}} Notre structure message UDP est en réalité la structure envoyée, soit le paquet comme spécifié dans les consignes.

@@ -40,7 +40,6 @@ int file_desc(char *filename){
 void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send){
 	char *payload;
 	int size = tab_512b(desc, &payload);
-	printf("the payload (taille est de %d) is : \n%s\n\n\n\n",size, payload);
 	struct msgUDP *new_paquet = (struct msgUDP *) malloc(sizeof(struct msgUDP));
 	new_paquet->type = PTYPE_DATA;
 	new_paquet->window=0;
@@ -50,7 +49,6 @@ void create_paquet(int desc, int seq_num, struct msgUDP **paquet, int *fini_send
 	free(payload);
 	//ATTENTION, si size <512, c'est qu'on a envoyé le dernier paquet donc on arrête le programme
 	if(size <512) *fini_send = 1;
-	printf("fini_send = %d\n",*fini_send);
 	//calcul du crc sur tout le contenu sauf lui mm
 	new_paquet->crc32 = crc32( 0L, (void *)new_paquet, sizeof(msgUDP) - sizeof(new_paquet->crc32));
 	printf("le paquet avec le numéro de séquence %d a un crc de %d\n",seq_num,new_paquet->crc32);
