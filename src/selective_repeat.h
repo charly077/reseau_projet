@@ -9,6 +9,11 @@
 
 
 /*
+ *@pre: nombre de us à attendre
+ */
+void delay(int usec);
+
+/*
 *@pre prend la structure windows
 *@post renvoie 1 si il y a un élément "libre" pour pouvoir décaller la fenetre et faire un nouvel envoie. 0 sinon.
 */
