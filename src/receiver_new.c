@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	printf("Nom du programme : %s , nom du fichier : %s , nom de l'hote attendu : %s et numéro de port : %d\n", argv[0], filename, hostname, port);
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_UNSPEC;//AF_INET6;      /* Allow IPv4 or IPv6 */
+    hints.ai_family = AF_INET6;//AF_UNSPEC;      /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
     hints.ai_flags = AI_PASSIVE;    /* For wildcard IP address */
     hints.ai_protocol = 0;          /* Any protocol */
@@ -283,7 +283,6 @@ int main(int argc, char *argv[])
 			ack_struct->window = tailleFenetre;
 			ack_struct->seq_num = lastack+1;
 			int crcAck = crc32(0L, Z_NULL, 0);
-			//crcAck = crc32(crcAck, ack_buf, strlen(ack_buf) - sizeof(uLong));       // j'ai modifié (compilait avec gcc ici)
 			crcAck = (int) crc32(0, (void *) ack_struct, sizeof(ack_struct) -sizeof(int)); //- sizeof(uLong));
 			ack_struct->crc32 = crcAck;
 		
