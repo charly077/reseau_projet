@@ -4,16 +4,16 @@
 \usepackage{amssymb}
 
 \title{Computer Network : Rapport du projet}
-\author{Charles Jacquet & Stéphane Kimmel}
+\author{Charles Jacquet \& Stéphane Kimmel}
 \date{}							
 
 \begin{document}
-%\maketitle
+\maketitle
 
 \section{Introduction}
-Pour ce projet, il nous a été demandé de conçevoir un programme en language C permettant d'envoyer un fichier vers hôte distant connecté en réseau local. La difficulté du programme résidait dans le fait qu'il devait permettre de déctecter les erreurs lors du transfert ainsi que les informations non-reçues et renvoyer les parties défectueuses afin que le fichier reçu soit exactement le même que celui envoyé à la base. Tout ceci, alors qu'il nous est imposé de travailler sur un protocole de transmission qui ne le fait pas nativement (UDP). Il a donc fallu surmonter manuellement les moindres obstacles rencontrés lors de la transmission.
+Pour ce projet, il nous a été demandé de conçevoir un programme en language C permettant d'envoyer un fichier vers un hôte distant connecté en réseau local. La difficulté du programme résidait dans le fait qu'il devait permettre de détecter les erreurs lors du transfert ainsi que les informations non-reçues et renvoyer les parties défectueuses afin que le fichier reçu soit exactement le même que celui envoyé à la base. Tout ceci, alors qu'il nous est imposé de travailler sur un protocole de transmission qui ne le fait pas nativement (UDP). 
 \section{Choix d'implémentation}
-Le protocle utilisé a dû être l'UDP,  l'algorithme de transmission était aussi fixé au selective repeat et la structure d'un packet étant donnée, les grands points de l'implémentation étaient fixés dès le début. \\
+Le protocle utilisé a dû être l'UDP,  l'algorithme de transmission était aussi fixé au selective repeat et la structure d'un paquet est également donnée. \\
 
 Par contre, le programme étant clairement divisé en 2 parties (envoyeur et reçeveur), nous avons décidé de nous le diviser en 2 parties distinctes tel quel. Ce qui fait que nous avons deux implémentations assez différentes.
 
@@ -29,10 +29,11 @@ Ensuite on décale la fenêtre tant que le premier paquet est ack.
 Enfin, si on reçoit 2 fois d'affilé un ack avec le même numéro de séquence, c'est qu'il n'a pas été réçu donc on réenvoie l'élément en question pour éviter d'attendre la fin du timer.\\
 De plus, nous avons implémenté le delay, c'est à dire qu'avant d'envoyer un fichier un attends le delay de x ms.
 Pour ce faire, on a utilisé plusieurs structures (se trouvant dans struct.h). \\
-\begin{verbatism}
-De plus, au début nous avions des soucis car nous ne laissions pas la place pour le '\0' à la fin des tableaux de char. Nous avons donc décidé d'utiliser uniquement
+\begin{verbatim}
+De plus, au début nous avions des soucis car nous ne laissions pas la place pour le '\0' 
+à la fin des tableaux de char. Nous avons donc décidé d'utiliser uniquement
 les 511 premier bytes de la payload et ne pas s'occuper du dernier.
-\end{verbatism}
+\end{verbatim}
 
 \begin{itemize}
 \item{\textbf{msgUDP}} Notre structure message UDP est en réalité la structure envoyée, soit le paquet comme spécifié dans les consignes.
@@ -43,18 +44,19 @@ les 511 premier bytes de la payload et ne pas s'occuper du dernier.
 
 \end{itemize}
 
-
+Pour ce qui est du delay. Le delay est le temps à attendre avant de transmettre chaque paquets. Nous avons donc créé une fonction delay permettant d'attendre le temps nécéssaire grâce à des structures timeval ainsi que la fonction gettimeofday() le delay nécéssaire avant l'envoie du paquet.
 
 \subsection{Receiver}
-Le receiver étant un peu plus simple à réaliser à première vue, nous avons juste préféré que le receiver utilise la structure packet qui est stockée dans un fichier externe ainsi, lorsque la structure d'un packet doit changer au cours du développement du programme, comme il a été le cas plusieurs fois, nous n'avons jamais rencontrés de problèmes à cause de ça. C'est le seul packet externe utilisé par le receiver car même pour préparer le packet d'un accusé, il n'est pas assez intéressant de créer un nouveau fichier externe car il est relativement simple à créer.
+Le receiver étant un peu plus simple à réaliser à première vue. Pour ce qui est de l'implémentation de la structure d'un paquet, nous avons fait le choix de la définir dans un fichier externe pour ne pas devoir la redéfinir dans le sender et dans le receiver, de plus, lorsque la structure d'un paquet doit changer au cours du développement du programme. C'est le seul paquet externe utilisé par le receiver car même pour préparer le paquet d'un accusé, il n'est pas assez intéressant de créer un nouveau fichier externe car il est relativement simple à créer.
 \\
-Tout d'abord, nous utilisons, tout comme le sender, la structure addrinfo pour la gestion des adresses de l'hôte et donc la méthode getaddrinfo. Cependant, pour une raison inconnu, lorsque l'argument hostname de cette méthode est différent de "::", il nous est impossible de faire fonctionner notre programme en local. Sinon celui-ci échoue chaque fois lors de l'appel à l'appel bind. Il faut donc chaque fois utiliser "::" comme argument hostname au programme (ou "::1" si l'on fait tourner notre programme en local).  
+Tout d'abord, nous utilisons, tout comme le sender, la structure addrinfo pour la gestion des adresses de l'hôte et donc la méthode getaddrinfo. Cependant, pour une raison inconnue, lorsque l'argument hostname de cette méthode est différent de "::", il nous est impossible de faire fonctionner notre programme en local. Sinon celui-ci échoue chaque fois lors de l'appel à l'appel bind. Il faut donc chaque fois utiliser "::" comme argument hostname au programme (ou "::1" si l'on fait tourner notre programme en local).  
 \\
-Ensuite, nous rentrons dans une boucle qui ne s'arrête que lorsque la longueur d'un packet reçu est plus petite que 512, auquel cas, cela marque la fin du programme. Dans la boucle, nous réceptons les packet après un appel à la fonction select qui permet de gérer la réception des packets lorsque le programme en traite un autre. 
+Ensuite, nous rentrons dans une boucle qui ne s'arrête que lorsque la longueur d'un paquet reçu est plus petite que 512, auquel cas, cela marque la fin du programme. Dans la boucle, nous réceptons les paquets après un appel à la fonction select qui permet de gérer la réception des paquets lorsque le programme en traite un autre. 
 \\
-Un petit incovénient de notre implémentation est qu'elle consomme une assez grande mémoire. En effet, il était obligatoire d'avoir un buffer tampon entre la réception d'un packet et l'écriture dans le fichier car autrement, les packets auraient été écrits dans la mauvais ordre dans le fichier. Nous avons décidé, par facilité, de créer un tableau de 256 lignes sur 512 colonnes comme buffer (131 072 bytes). Ceci est assez imposant comme taille et il aurait été possible de s'arranger en faisant un buffer tampon plus petit mais nous n'y avons pas porté trop d'importance tout d'abord car celà permettait d'y voir plus clair pour le déboguage du programme et permettait aussi de mieux s'y retrouver dans la gestion de la fenêtre qui coulisse sur ce tableau. Ca reste aussi ridiculement petit pour les ordinateurs de nos jours mais c'est celà reste sans contester une des dernières parties restante à optimiser dans notre programme. 
+Un petit incovénient de notre implémentation est qu'elle consomme une assez grande mémoire. En effet, il était obligatoire d'avoir un buffer tampon entre la réception d'un paquet et l'écriture dans le fichier car autrement, les paquets auraient pu être écrits dans la mauvais ordre dans le fichier (dû au protocole UDP qui ne certifie pas l'ordre d'arrivée des différents paquets). Nous avons décidé, par facilité, de créer un tableau de 256 lignes sur 512 colonnes comme buffer (131 072 bytes). Ceci est assez imposant comme taille et il aurait été possible de s'arranger en faisant un buffer tampon plus petit mais nous n'y avons pas porté trop d'importance tout d'abord car celà permettait d'y voir plus clair pour le déboguage du programme et permettait aussi de mieux s'y retrouver dans la gestion de la fenêtre qui coulisse sur ce tableau. Ca reste aussi ridiculement petit pour les ordinateurs de nos jours mais c'est celà reste sans contester une des dernières parties restante à optimiser dans notre programme. 
 \\
-Enfin, nous aurions pû, après réception du premier packet, créer une connection avec l'hôte local. Cela aurait permis de passer en TCP mais nous avons décidé dès le début de travailler constamment en UDP, ce qui fait que nous n'avons aucune connection avec l'autre hôte. Celà permet entre outre, de n'avoir qu'une boucle de réception de packet dans notre programme et que le programme soit plus malléable, nous ne dépendons effectivement jamais du protocole de plus haut niveau.
+
+%Enfin, nous aurions pû, après réception du premier paquet, créer une connection avec l'hôte local. Cela aurait permis de passer en TCP mais nous avons décidé dès le début de travailler constamment en UDP, ce qui fait que nous n'avons aucune connection avec l'autre hôte. Celà permet entre outre, de n'avoir qu'une boucle de réception de paquet dans notre programme et que le programme soit plus malléable, nous ne dépendons effectivement jamais du protocole de plus haut niveau.
 
 \section{Conclusion}
 Pour conclure, les difficultées de ce projet ne sont arrivées que lors de la mise en oeuvre. Que ce soit pour l'envoie ou la réception des paquets, nous avons eu pas mal de bugs. Certain étant à première vue incompréhensible comme l'arrêt du programme entre 2 printf.
@@ -69,10 +71,7 @@ Mais nous sommes parvenu à trouver des solutions et à avoir un programme (sender
 Pour le test d'interopérabilité, nous avons été en salle intel où nous avons fait les différents tests. Nous avons juste eu quelques difficultées au début mais en comparant les codes on a pu vite voir les différences et prendre la solution qui paraissait la meilleure. Il nous a fallut une dizaines de minutes pour que les différents programmes soient fonctionnels entre eux.
 \subsection{Effectué avec le groupe de Sandrine Romainville et Jolan Werner}
 Ces tests-ci n'ont pas été très convainquant, et ce dû à pas mal de divergences dans nos 2 programmes.
-Mais le plus grand problème a été la structure de leur qui est assez différente de la nôtre et du coup, incompatible.
+Mais le plus grand problème a été la structure de paquet qui est assez différente de la nôtre et du coup, incompatible.
 Les deux programmes arrivent à communiquer mais ne se comprennent pas sur les numéros de séquences, les CRC, ...
-
-
-
 
 \end{document}  
