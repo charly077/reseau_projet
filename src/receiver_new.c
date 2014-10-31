@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 	int port;
 	char *port_to_string;
 	char *hostname;
+	int output_sur_std;
 
     if (argc != 3 && argc != 5) 
     {
@@ -46,12 +47,14 @@ int main(int argc, char *argv[])
 		hostname = argv[3];
 		port = atoi(argv[4]);
 		port_to_string = argv[4];
+		output_sur_std = 0;
 	}
 	else 
 	{
 		// prendre le filename sur le stdin
-		printf("Veuillez entrez le nom du fichier (max 19 caractères)\n");
-		scanf("%19s",filename);					// Comment on fait pour l'extension ???
+		//printf("Veuillez entrez le nom du fichier (max 19 caractères)\n");
+		//scanf("%19s",filename);					// Comment on fait pour l'extension ???
+		output_sur_std = 1;
 		hostname = argv[1];
 		port = atoi(argv[2]);
 		port_to_string = argv[2];
@@ -67,7 +70,7 @@ int main(int argc, char *argv[])
 
     int sockett; 
     int s;
-    	s = getaddrinfo("::", port_to_string, &hints, &result); //port_to_string
+    	s = getaddrinfo(hostname, port_to_string, &hints, &result); //port_to_string
     	if (s != 0) {
         	fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
         	exit(EXIT_FAILURE);
@@ -120,11 +123,15 @@ int main(int argc, char *argv[])
     memset(c, 0, sizeof(c));
 
 	// Ouvrir le fichier
-	FILE *fichier = fopen(filename, "w");
-	if (fichier == NULL)
+	FILE *fichier = NULL;
+	if (output_sur_std == 0)
 	{
-    	printf("Error opening file!\n");
-    	exit(EXIT_FAILURE);
+		fichier = fopen(filename, "w");
+		if (fichier == NULL)
+		{
+	    	printf("Error opening file!\n");
+	    	exit(EXIT_FAILURE);
+		}
 	}
 
 	// Préparation de l'accusé
@@ -198,15 +205,15 @@ int main(int argc, char *argv[])
 			else 
 			{
 				// Si on est ici, c'est que les CRC correspondent
-				printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
-					packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
+				//printf("Nouveau message reçu : type %d, window number : %d, sequence number : %d, length : %d \n", 
+				//	packet_struct->type, packet_struct->window, packet_struct->seq_num, packet_struct->length);
 				// Copie de tous les éléments requis depuis la structure
 				j = packet_struct->seq_num;			
 				strcpy(payload_buf, packet_struct->payload);
 				longueur_recu = packet_struct->length;
 				
 				// Gestion du stockage de l'élément en fonction de là ou est la fenêtre !!!
-				printf("min : %d < %d < %d : max\n", minimum, j,  maximum);
+				//printf("min : %d < %d < %d : max\n", minimum, j,  maximum);
 				if(j >= minimum && j <= maximum)
 				{
 					// Copie dans le buffer
@@ -233,9 +240,15 @@ int main(int argc, char *argv[])
 			// Actualisation des variables							
 			while(strncmp(buffer_tot[attendu] , c,  1) != 0) 					// Temps que le attendu est rempli
 			{
-				fprintf(fichier, "%s\n", buffer_tot[attendu]); 					// Copie dans le fichier
-				//printf("attendu dans la boucle : %d\n", attendu);
-				//printf("%s \n", buffer_tot[attendu]);
+				if (output_sur_std == 1)
+				{
+					printf("%s\n", buffer_tot[attendu]);
+				}
+				else
+				{
+					fprintf(fichier, "%s\n", buffer_tot[attendu]); 					// Copie dans le fichier
+				}
+				
 				memset(buffer_tot[attendu], 0, sizeof(buffer_tot[attendu])); 			// On remet à 0
 				lastack = attendu;												// lastack = attendu
 				attendu = (attendu + 1) % 256;									// attendu++
@@ -248,6 +261,7 @@ int main(int argc, char *argv[])
 		// Envoyer un ACK
 		// Si les données sont dispo en envoi (pour envoyer l'ACK)
 			tailleFenetre = 31;	
+			/*
 			h++;
 			if(h <= 4)
 			{
@@ -261,10 +275,10 @@ int main(int argc, char *argv[])
 			{
 				//tailleFenetre = 31;
 			}
-			
+			*/
 			maximum = minimum + (tailleFenetre-1);	
 			
-			printf("taille fenêtre envoyée : %d\n", tailleFenetre);		
+			//printf("taille fenêtre envoyée : %d\n", tailleFenetre);		
 			
 			ack_struct->window = tailleFenetre;
 			ack_struct->seq_num = lastack+1;
@@ -275,12 +289,14 @@ int main(int argc, char *argv[])
 		
 			if(sendto(sockett, ack_struct, sizeof(struct msgUDP), 0, rp->ai_addr, rp->ai_addrlen) == sizeof(struct msgUDP))
 			{
-				printf("Accusé envoyé avec numéro : %d\n", lastack+1);
+				//printf("Accusé envoyé avec numéro : %d\n", lastack+1);
 			}		
 		} 
 	
     }	// fin du while
-
-    fclose(fichier);
+    if (output_sur_std == 0)
+    {
+    	fclose(fichier);
+	}
     printf("Fin du programme, la copie s'est correctement exécutée\n");
 } // fin du main
