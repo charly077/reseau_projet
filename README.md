@@ -1,4 +1,4 @@
-reseau projet: NOT WOKRING! (Wrong endianness)
+reseau projet: NOT WORKING! (Wrong endianness)
 =============
 
 Projet réseau 2014, Un makefile permet de compiler les programmes grâce à la fonction make
